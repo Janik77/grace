@@ -1,0 +1,82 @@
+/* ===================== GRACE — FINAL CSS ===================== */
+
+/* Vars */
+:root{
+  --brand-primary:#53C0A9;
+  --brand-dark:#002B54;
+  --brand-bg:#f7f9fb;
+  --text:#1F2D3D;
+  --muted:#606e7c;
+  --line:#e7ecf3;
+  --card:#fff;
+  --radius:14px;
+  --shadow:0 6px 16px rgba(6,21,46,.06);
+}
+
+/* Base */
+html,body{height:100%}
+body{margin:0;background:var(--brand-bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,sans-serif}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--brand-dark),var(--brand-primary));color:#fff;box-shadow:var(--shadow)}
+.header .wrap{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.brand__logo-img{width:42px;height:42px;object-fit:contain;border-radius:8px}
+.header-subtitle{color:#ffffffd9;font-weight:700;letter-spacing:.2px}
+
+/* Layout */
+.layout{display:flex;gap:18px;max-width:1200px;margin:28px auto;padding:0 20px}
+
+/* Sidebar */
+.sidebar{width:250px;min-width:250px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);height:fit-content;position:sticky;top:84px}
+.nav{list-style:none;margin:0;padding:10px;display:flex;flex-direction:column;gap:4px}
+.nav .muted{color:var(--muted);font-size:.9rem;padding:8px 12px 4px}
+.nav a{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--text);padding:10px 12px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav a:hover{background:#f0f3f9}
+.nav a.active{background:#0f2f57;color:#fff}
+
+/* Content */
+.content{flex:1}
+.page-title{margin:0 0 6px;font-size:24px;font-weight:800}
+.page-sub{margin:0 0 22px;color:var(--muted)}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin:0;display:block}
+.card__title{font-weight:700;margin:0 0 10px;color:#27364a}
+
+/* ВЕРХНИЙ РЯД КАРТОЧЕК ВЫРОВНЕН И ОДНОЙ ВЫСОТЫ */
+.grid{display:grid;gap:16px}
+.grid.cols-2{grid-template-columns:1fr 1fr}
+.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid{align-items:stretch}                 /* растягиваем элементы по высоте трека */
+.grid > .card{margin:0 !important;height:100%} /* убираем margin у всех карточек в гриде */
+.card + .card{margin-top:16px}             /* вертикальные стопки вне grid (например ниже) */
+@media (max-width:1200px){.grid.cols-3{grid-template-columns:1fr 1fr}}
+@media (max-width:768px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
+
+/* Tables / Buttons (как было) */
+.table thead th{background:#e9f4f2 !important;color:var(--brand-dark);font-weight:700}
+.btn-primary{background:var(--brand-primary) !important;border-color:var(--brand-primary) !important}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-secondary{background:var(--brand-dark) !important;border-color:var(--brand-dark) !important;color:#fff}
+.btn-outline-secondary{border-color:#cfd8e4 !important;color:#304256 !important}
+
+/* Forms */
+.form-row{display:grid;gap:12px;margin-top:10px}
+.form-2{grid-template-columns:repeat(2,1fr)}
+.form-3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:992px){.form-2,.form-3{grid-template-columns:1fr}}
+
+.form-row label{display:inline-flex;align-items:center;gap:6px;font-size:.92rem;color:var(--muted);margin-bottom:4px}
+.form-row input,.form-row select,.form-row textarea{width:100%;border:1px solid #dce3ea;border-radius:8px;padding:8px 10px;background:#fff}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--brand-primary);box-shadow:0 0 0 2px rgba(83,192,169,.3);outline:none}
+.form-row textarea{min-height:84px;resize:vertical}
+
+/* ЧЕК-ЛИСТЫ — стабильное выравнивание чекбокса и текста */
+.checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 16px}
+.checklist label{display:flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35}
+.checklist input[type="checkbox"]{margin:0;width:18px;height:18px;accent-color:var(--brand-primary)}
+
+/* Utils */
+.money{text-align:right;min-width:120px}
+.input-num{text-align:right}
+.sticky-footer{position:sticky;bottom:0;background:#fff;padding:12px 16px;border-top:1px solid var(--line)}

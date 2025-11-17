@@ -1,0 +1,35 @@
+{% extends 'portal/base.html' %}
+{% block title %}Grace — Отчёт{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Отчёт</h1>
+  <p class="page-sub">Ключевые показатели и быстрые ссылки.</p>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <div class="card__title">Активные заказы</div>
+      <div class="kpi">—</div>
+      <div class="text-muted">Подтянем из БД позже</div>
+    </div>
+    <div class="card">
+      <div class="card__title">На согласовании</div>
+      <div class="kpi">—</div>
+      <div class="text-muted">Этап «Дизайнер / визуал»</div>
+    </div>
+    <div class="card">
+      <div class="card__title">В работе цеха</div>
+      <div class="kpi">—</div>
+      <div class="text-muted">Печать · Резка · Сборка</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card__title">Последние операции</div>
+    <table class="table">
+      <thead><tr><th>Дата</th><th>Проект</th><th>Статус</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>—</td><td><span class="badge">—</span></td><td><a href="{% url 'portal:wizard' %}" class="btn btn-ghost">Открыть</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

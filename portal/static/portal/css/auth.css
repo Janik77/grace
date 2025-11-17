@@ -1,0 +1,179 @@
+/* ===================== GRACE AUTH — FINAL CLEAN ===================== */
+
+/* === VARIABLES === */
+:root {
+  --brand-primary: #53C0A9;
+  --brand-dark: #002B54;
+  --bg: #f7f9fb;
+  --muted: #64748b;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(6, 21, 46, 0.08);
+}
+
+/* === GLOBAL === */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* ← Убирает ползунок */
+}
+
+body {
+  background: var(--bg);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: #1f2d3d;
+}
+
+.wrap {
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px 30px;
+  border: 1px solid #e7ecf3;
+  transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(6, 21, 46, 0.12);
+}
+
+/* === BRAND === */
+.brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.brand img {
+  height: 58px;
+  margin-bottom: 10px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--brand-dark);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-top: 4px;
+  margin-bottom: 28px;
+}
+
+/* === LABELS === */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* === INPUTS === */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"] {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1rem;
+  border: 1.6px solid #d7dee8;
+  border-radius: 14px;
+  background: #fff;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  margin-bottom: 14px; /* ✅ немного воздуха под каждым инпутом */
+
+}
+
+form input[type="text"]:hover,
+form input[type="email"]:hover,
+form input[type="password"]:hover {
+  border-color: #aab7c4;
+}
+
+form input[type="text"]:focus,
+form input[type="email"]:focus,
+form input[type="password"]:focus {
+  border-color: var(--brand-primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(83, 192, 169, 0.3);
+  outline: none;
+}
+
+/* === CHECKBOX & LINKS === */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.row input[type="checkbox"] {
+  margin-right: 6px;
+  transform: scale(1.1);
+}
+
+.row a {
+  color: var(--brand-dark);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.row a:hover {
+  text-decoration: underline;
+}
+
+/* === BUTTON === */
+.btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  background: linear-gradient(90deg, var(--brand-dark), var(--brand-primary));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* === MESSAGES === */
+.msg {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #c0392b;
+}
+
+/* === FOOTER === */
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 18px;
+}
+
+/* === Autofill fix (Chrome) === */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: #1F2D3D !important;
+}

@@ -1,0 +1,18 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="profile-card">
+  <h2>👤 Профиль пользователя</h2>
+  <div class="profile-info">
+    <p><strong>Имя:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+    <p><strong>Логин:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+  </div>
+
+  <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Выйти</a>
+</div>
+{% endblock %}

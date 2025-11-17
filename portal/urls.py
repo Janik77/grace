@@ -1,0 +1,14 @@
+# portal/urls.py
+from django.urls import path
+from . import views
+
+app_name = "portal"  # ← вот это важно
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('order/', views.order, name='order'),
+    path('wizard/', views.wizard, name='wizard'),
+    path('help/', views.help_page, name='help'),
+    path('directory/', views.directory, name='directory'),
+    path('staff/', views.staff, name='staff'),
+]

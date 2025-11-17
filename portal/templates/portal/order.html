@@ -1,0 +1,107 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+{% block title %}Калькулятор заказа{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Калькулятор</h1>
+<p class="page-sub">Счёт, позиции, экспорт в Word / CSV / Sheets.</p>
+
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center text-white"
+       style="background:linear-gradient(90deg,#0b2040,#0f3a6b)">
+    <div>
+      <div class="brand">Grace — Калькулятор заказа</div>
+      <div class="small text-white-50">Добавляйте колонки и строки, расчёт по строкам и итог с процентом</div>
+    </div>
+   <div class="d-flex gap-2 flex-wrap">
+  <button id="exportCsv"  class="btn btn-outline-light btn-sm btn-icon" title="Экспорт CSV"><i class="bi bi-filetype-csv"></i></button>
+  <button id="copyWord"   class="btn btn-outline-light btn-sm btn-icon" title="Копировать в Word"><i class="bi bi-file-earmark-word"></i></button>
+  <button id="sendTrello" class="btn btn-warning btn-sm btn-icon"       title="Отправить в Trello"><i class="bi bi-trello"></i></button>
+  <button id="sendSheets" class="btn btn-success btn-sm btn-icon"       title="Отправить в Google Sheets"><i class="bi bi-google"></i></button>
+  <button id="clearAll"   class="btn btn-outline-light btn-sm btn-icon" title="Очистить"><i class="bi bi-x-circle"></i></button>
+</div>
+
+
+  </div>
+
+  <div class="card-body">
+    <div class="row g-2 mb-3">
+      <div class="col-auto"><button id="addRow" class="btn btn-primary">+ Добавить строку</button></div>
+      <!-- <div class="col-auto"><button id="addColumn" class="btn btn-secondary">+ Добавить колонку</button></div> -->
+      <div class="col-auto"><button id="resetColumns" class="btn btn-outline-secondary">Сбросить доп. колонки</button></div>
+      <div class="col-auto ms-auto">
+        <input id="projectName" class="form-control" placeholder="Название проекта (для Trello/Sheets)">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table id="calcTable" class="table table-bordered table-hover align-middle bg-white">
+        <thead class="table-light">
+          <tr id="headerRow">
+            <th style="width:40px">#</th>
+            <th>Статья</th>
+            <th style="width:120px">Единица</th>
+            <th style="width:130px">Количество</th>
+            <th style="width:160px">Цена за ед. (₸)</th>
+            <th class="money">Общая сумма (₸)</th>
+            <th style="width:90px">Действие</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="row mt-3 g-3">
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="text-muted mb-2">Примечания / Информация</div>
+          <textarea id="notes" class="form-control" rows="5"
+                    placeholder="Условия, примечания, договор …"></textarea>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-muted">Итоги</div>
+            <div class="text-muted">Пересчёт автоматически</div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div>Промежуточная сумма:</div>
+            <div id="subtotal" class="fw-semibold">0.00 ₸</div>
+          </div>
+          <div class="d-flex justify-content-between mt-2 align-items-center">
+            <div class="me-2">Процент (маржа/налог) %</div>
+            <div style="width:150px">
+              <input id="percent" type="number" min="0" step="0.01" value="0"
+                     class="form-control input-num">
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mt-2">
+            <div>Сумма по проценту:</div>
+            <div id="percentAmount" class="fw-semibold">0.00 ₸</div>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <div class="fs-5">Итоговая сумма:</div>
+            <div id="grandTotal" class="fs-5 fw-bold">0.00 ₸</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer small text-muted sticky-footer">
+    <div class="d-flex justify-content-between">
+      <div>Grace — система расчётов</div>
+      <div>Экспорт CSV / Копия для Word / Интеграции</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'portal/js/app.js' %}"></script>
+<script src="{% static 'portal/js/trello.js' %}"></script>
+<script src="{% static 'portal/js/sheets.js' %}"></script>
+{% endblock %}

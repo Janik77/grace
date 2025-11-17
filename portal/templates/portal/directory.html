@@ -1,0 +1,33 @@
+{% extends 'portal/base.html' %}
+{% block title %}Справочник{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Справочник</h1>
+  <p class="page-sub">Типовые материалы, форматы, профили, плёнки — позже подключим БД.</p>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <div class="card__title">Материалы</div>
+      <ul class="text-muted">
+        <li>PVC 3–10 мм</li>
+        <li>Акрил (оргстекло)</li>
+        <li>Композит</li>
+        <li>Алюминиевый профиль</li>
+        <li>Плёнка Oracal</li>
+        <li>Подсветка LED</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card__title">Шаблоны этапов</div>
+      <ul class="text-muted">
+      <div class="form-row checklist">
+      <label><input type="checkbox"> Печать</label>
+      <label><input type="checkbox"> Резка</label>
+      <label><input type="checkbox"> Сборка</label>
+      <label><input type="checkbox"> Сварка</label>
+      <label><input type="checkbox"> Установка</label>
+    </div>
+      </ul>
+    </div>
+  </div>
+{% endblock %}
