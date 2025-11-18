@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect, render
 
+from accounts.models import Employee
+
 from .forms import ClientForm, OrderForm, OrderItemFormSet
 from .models import InventoryItem, Order
 
@@ -88,4 +90,10 @@ def directory(request):
 
 
 def staff(request):
-    return render(request, "portal/staff.html")
+    employees = (
+        Employee.objects.select_related("main_position__department")
+        .prefetch_related("skills")
+        .order_by("full_name")
+    )
+    context = {"employees": employees}
+    return render(request, "portal/staff.html", context)
