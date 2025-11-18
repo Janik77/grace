@@ -73,17 +73,31 @@ WSGI_APPLICATION = 'graceproject.wsgi.application'
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'grace',  # имя БД, которую ты создал
-        'USER': 'grace',  # пользователь MySQL
-        'PASSWORD': 'StrongPass!123',  # пароль
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {'charset': 'utf8mb4'},
+
+# Allow switching between MySQL (production) and SQLite (local/dev) via env
+# variables. If MySQL is unreachable locally, set DB_ENGINE=sqlite in .env to
+# avoid "table does not exist" errors when migrations were not applied.
+DB_ENGINE = os.getenv('DB_ENGINE', 'mysql').lower()
+
+if DB_ENGINE == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'grace'),
+            'USER': os.getenv('DB_USER', 'grace'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'StrongPass!123'),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+            'OPTIONS': {'charset': 'utf8mb4'},
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
