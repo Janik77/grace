@@ -3,155 +3,48 @@
 {% block title %}Мастер заказа{% endblock %}
 
 {% block content %}
-
   <h1 class="page-title">Мастер заказа</h1>
-  <p class="page-sub">Пошагово: Клиент → ТЗ → Дизайнер → Офис → Цех/Монтаж → Экспорт.</p>
+  <p class="page-sub">Сохраняем реквизиты и базовую информацию о заказе. Детали и позиции можно добавить позже в карточке заказа.</p>
 
-  <!-- Карточки шагов. Если у тебя уже готов полноценный контент wizard.html,
-       просто вставь его внутрь этих карточек (или замени блок целиком) -->
-  <div class="grid cols-2">
-    <div class="card">
-      <div class="card__title">1) Клиент и сроки</div>
-      <div class="form-row form-2">
-        <div><label>Клиент</label><input id="w_client" type="text" placeholder="Название / ФИО"></div>
-        <div><label>Телефон</label><input id="w_phone" type="text" placeholder="+7 ..."></div>
-        <div><label>Старт</label><input id="w_start" type="date"></div>
-        <div><label>Дедлайн</label><input id="w_due" type="date"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card__title">2) Техническое задание</div>
-      <div class="form-row">
-        <div><label>Назначение</label><input id="w_purpose" type="text" placeholder="Вывеска / баннер / интерьер"></div>
-        <div class="form-2">
-          <div>
-            <label>Материал</label>
-            <input id="w_materials" list="materialsList" type="text" placeholder="PVC 5–10 мм, композит...">
-            <datalist id="materialsList">
-              <option>PVC 3–10 мм</option><option>Акрил (оргстекло)</option>
-              <option>Композит</option><option>Алюминиевый профиль</option>
-              <option>Плёнка Oracal</option><option>Подсветка LED</option>
-              <option>Каркас сталь</option>
-            </datalist>
+  <form method="post" class="card shadow-sm">{% csrf_token %}
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="border rounded p-3 h-100">
+            <div class="fw-semibold mb-2">1) Клиент</div>
+            {% for field in client_form %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
           </div>
-          <div><label>Цвет/Палитра</label><input id="w_color" type="text" placeholder="CMYK / Pantone"></div>
         </div>
-        <div><label>Комментарий</label><textarea id="w_brief" placeholder="Особенности монтажа, высоты, погодные условия..."></textarea></div>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card__title">3) Дизайнер — макеты</div>
-      <div class="form-row form-3">
-        <div class="form-3" style="grid-column:1/-1">
-          <div><label>Базовое имя проекта</label><input id="w_base_name" type="text" placeholder="BI Group — ПВХ-лого, Шымкент"></div>
-          <div><label>Нужен «печать»</label><select id="w_need_print"><option value="yes">Да</option><option value="no">Нет</option></select></div>
-          <div><label>Нужен «визуал»</label><select id="w_need_visual"><option value="yes">Да</option><option value="no">Нет</option></select></div>
-        </div>
-        <div>
-          <label>Имя (печать)</label>
-          <input id="w_name_print" type="text" readonly>
-          <button class="btn btn-gold" type="button" id="w_copy_print">Копировать</button>
-        </div>
-        <div>
-          <label>Имя (визуал)</label>
-          <input id="w_name_visual" type="text" readonly>
-          <button class="btn btn-gold" type="button" id="w_copy_visual">Копировать</button>
-        </div>
-        <div>
-          <label>Финальный макет (ссылка)</label>
-          <input id="w_final" type="text" placeholder="Drive/URL">
-        </div>
-        <div style="grid-column:1/-1">
-          <label>Замечания заказчика</label>
-          <textarea id="w_notes_client" placeholder="Кант серебристый, толщ. букв..."></textarea>
+        <div class="col-lg-6">
+          <div class="border rounded p-3 h-100">
+            <div class="fw-semibold mb-2">2) Заказ</div>
+            <p class="small text-muted mb-3">Заполните название и плановую дату сдачи. Статус автоматически «В разработке».</p>
+            {% for field in order_form %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card__title">4) Офис — финансы</div>
-      <div class="form-row form-3">
-        <div><label>Смета №</label><input id="w_estimate" type="text"></div>
-        <div><label>Менеджер</label><input id="w_manager" type="text"></div>
-        <div><label>Статус оплаты</label><select id="w_pay"><option>Предоплата</option><option>Оплата</option><option>Постоплата</option></select></div>
+    <div class="card-footer d-flex flex-column flex-md-row justify-content-between gap-2">
+      <div class="text-muted">Сохраните только реквизиты или сразу полный заказ. Позиции можно добавить позже.</div>
+      <div class="btn-group">
+        <button type="submit" name="action" value="save_client" class="btn btn-outline-secondary">Только реквизиты</button>
+        <button type="submit" name="action" value="save_full" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить заказ</button>
       </div>
     </div>
-
-    <div class="card" style="grid-column:1/-1">
-      <div class="card__title">5) Цех / Монтаж</div>
-      <div class="form-row">
-        <div class="form-3">
-          <div><label><input type="checkbox" id="tpl_print" checked> Печать</label></div>
-          <div><label><input type="checkbox" id="tpl_cut" checked> Резка</label></div>
-          <div><label><input type="checkbox" id="tpl_assembly"> Сборка</label></div>
-          <div><label><input type="checkbox" id="tpl_weld"> Сварка</label></div>
-          <div><label><input type="checkbox" id="tpl_install" checked> Установка</label></div>
-        </div>
-        <div class="form-2" style="grid-column:1/-1">
-          <div><label>Материалы (кратко)</label><textarea id="w_prod_materials"></textarea></div>
-          <div><label>Техкарта</label><textarea id="w_prod_tech" placeholder="Шаблон этапов добавится сюда"></textarea></div>
-        </div>
-        <div class="form-2" style="grid-column:1/-1">
-          <div><label>Сроки по этапам</label><textarea id="w_prod_terms"></textarea></div>
-          <div><label>Адрес / Монтаж</label><textarea id="w_montage"></textarea></div>
-        </div>
-        <div>
-          <button class="btn btn-ghost" type="button" id="w_apply_tpl">Применить шаблон</button>
-          <button class="btn btn-primary" type="button" id="w_export_word">Экспорт в Word</button>
-          <button class="btn btn-primary" type="button" id="w_export_csv">Экспорт CSV</button>
-          <button class="btn btn-gold" type="button" id="w_send_trello">Отправить в Trello</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  </form>
 {% endblock %}
 
-{% block scripts %}
-  {% load static %}
-  <script src="{% static 'portal/js/trello.js' %}"></script>
-  <script src="{% static 'portal/js/wizard.js' %}"></script>
-
-  <script>
-    (function(){
-      const base = () => (document.getElementById('w_base_name')?.value || '').trim();
-      const need = id => (document.getElementById(id)?.value || 'yes') === 'yes';
-
-      function regen(){
-        const b = base();
-        const p = b ? `${b} — печать` : '';
-        const v = b ? `${b} — визуал`  : '';
-        const np = document.getElementById('w_name_print');
-        const nv = document.getElementById('w_name_visual');
-        if (np) np.value = need('w_need_print')  ? p : '';
-        if (nv) nv.value = need('w_need_visual') ? v : '';
-      }
-
-      ['w_base_name','w_need_print','w_need_visual'].forEach(id=>{
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', regen);
-      });
-
-      document.getElementById('w_copy_print')?.addEventListener('click', ()=>{
-        navigator.clipboard.writeText(document.getElementById('w_name_print')?.value || '');
-      });
-      document.getElementById('w_copy_visual')?.addEventListener('click', ()=>{
-        navigator.clipboard.writeText(document.getElementById('w_name_visual')?.value || '');
-      });
-
-      document.getElementById('w_apply_tpl')?.addEventListener('click', ()=>{
-        const parts=[];
-        if(document.getElementById('tpl_print')?.checked)    parts.push('Печать: подготовка → цветопроба → печать.');
-        if(document.getElementById('tpl_cut')?.checked)      parts.push('Резка: плоттер/фрезер → контроль размеров.');
-        if(document.getElementById('tpl_assembly')?.checked) parts.push('Сборка: примерка → крепёж → контроль качества.');
-        if(document.getElementById('tpl_weld')?.checked)     parts.push('Сварка: каркас → швы → шлифовка/покраска.');
-        if(document.getElementById('tpl_install')?.checked)  parts.push('Установка: доставка → монтаж → ТБ чек-лист.');
-        const box = document.getElementById('w_prod_tech');
-        if (box) box.value = parts.join('\n');
-      });
-
-      regen();
-    })();
-  </script>
-{% endblock %}
+{% block scripts %}{% endblock %}

@@ -3,16 +3,54 @@
 
 {% block content %}
   <h1 class="page-title">Сотрудники</h1>
-  <p class="page-sub">Пока статично; позже сделаем роли и учётные записи.</p>
+  <p class="page-sub">Живой список сотрудников из базы: должности, отделы и контакты.</p>
 
   <div class="card">
-    <table class="table">
-      <thead><tr><th>ФИО</th><th>Роль</th><th>Контакты</th></tr></thead>
-      <tbody>
-        <tr><td>—</td><td>Менеджер</td><td class="text-muted">+7 …</td></tr>
-        <tr><td>—</td><td>Дизайнер</td><td class="text-muted">+7 …</td></tr>
-        <tr><td>—</td><td>Производство</td><td class="text-muted">+7 …</td></tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ФИО</th>
+            <th>Должность</th>
+            <th>Отдел</th>
+            <th>Телефон</th>
+            <th>Статус</th>
+            <th>Навыки</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if employees %}
+            {% for employee in employees %}
+              <tr>
+                <td>{{ employee.full_name }}</td>
+                <td>{{ employee.main_position.name|default:"—" }}</td>
+                <td>{{ employee.main_position.department.name|default:"—" }}</td>
+                <td>
+                  {% if employee.phone %}
+                    <a href="tel:{{ employee.phone }}">{{ employee.phone }}</a>
+                  {% else %}
+                    <span class="text-muted">нет номера</span>
+                  {% endif %}
+                </td>
+                <td>{{ employee.status }}</td>
+                <td>
+                  {% with employee.skills.all as skills %}
+                    {% if skills %}
+                      {{ skills|join:", " }}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-muted">Сотрудников пока нет. Добавьте их через админку или импорт.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
   </div>
 {% endblock %}

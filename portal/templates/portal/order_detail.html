@@ -1,0 +1,110 @@
+{% extends 'portal/base.html' %}
+{% block title %}Заказ {{ order.title }}{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div>
+      <h1 class="page-title">{{ order.title }}</h1>
+      <p class="text-muted mb-0">Клиент: <strong>{{ order.client.name }}</strong> · Телефон: {{ order.client.phone|default:'—' }} · Адрес: {{ order.client.address|default:'—' }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if request.user.is_superuser %}
+        <form method="post" action="" class="d-inline">{% csrf_token %}
+          <input type="hidden" name="action" value="toggle_lock">
+          <button type="submit" class="btn {% if order.is_locked %}btn-outline-secondary{% else %}btn-outline-danger{% endif %}">
+            {% if order.is_locked %}<i class="bi bi-unlock"></i> Разблокировать{% else %}<i class="bi bi-lock"></i> Заблокировать{% endif %}
+          </button>
+        </form>
+      {% else %}
+        <span class="badge {% if order.is_locked %}bg-warning text-dark{% else %}bg-light text-dark{% endif %}">
+          {% if order.is_locked %}Заблокирован{% else %}Редактирование открыто{% endif %}
+        </span>
+      {% endif %}
+      <a href="{% url 'portal:index' %}" class="btn btn-light">К списку</a>
+    </div>
+  </div>
+
+  {% if not can_edit %}
+    <div class="alert alert-warning mt-3">
+      Заказ заблокирован для редактирования. Только супер-админ может снять блокировку.
+    </div>
+  {% endif %}
+
+  <form method="post" class="card shadow-sm mt-3">{% csrf_token %}
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="border rounded p-3 h-100">
+            <div class="fw-semibold mb-3">Информация о заказе</div>
+            {% for field in order_form %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="border rounded p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="fw-semibold">Позиции заказа</div>
+              <small class="text-muted">Всего строк: {{ order.items.count }}</small>
+            </div>
+            {{ item_formset.management_form }}
+            <div class="row g-3">
+              {% for form in item_formset %}
+                {% if can_edit or form.instance.pk %}
+                <div class="col-12">
+                  <div class="border rounded p-3 h-100">
+                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="fw-semibold">Позиция {{ forloop.counter }}</div>
+                      {% if can_edit %}
+                        <label class="form-check-label small">{{ form.DELETE }} Удалить</label>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">{{ form.title.label }}</label>
+                      {{ form.title }}
+                      {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-sm-6">
+                        <label class="form-label">{{ form.quantity.label }}</label>
+                        {{ form.quantity }}
+                      </div>
+                      <div class="col-sm-6">
+                        <label class="form-label">{{ form.unit_price.label }}</label>
+                        {{ form.unit_price }}
+                      </div>
+                    </div>
+                    <div class="mt-2">
+                      <label class="form-label">{{ form.comment.label }}</label>
+                      {{ form.comment }}
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              {% endfor %}
+              {% if not can_edit and not order.items.exists %}
+                <div class="col-12">
+                  <div class="alert alert-light mb-0">Позиции ещё не добавлены.</div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <div>
+        <div class="fw-semibold">Текущий статус: {{ order.get_status_display }}</div>
+        <div class="text-muted small">Сумма по позициям: {{ order.total_amount|default:0 }} ₸</div>
+      </div>
+      {% if can_edit %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить изменения</button>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}
