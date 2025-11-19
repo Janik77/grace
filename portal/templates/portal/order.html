@@ -1,107 +1,219 @@
 {% extends 'portal/base.html' %}
-{% load static %}
+{% load humanize %}
 {% block title %}Калькулятор заказа{% endblock %}
 
 {% block content %}
 <h1 class="page-title">Калькулятор</h1>
-<p class="page-sub">Счёт, позиции, экспорт в Word / CSV / Sheets.</p>
+<p class="page-sub">Расчёт стоимости с привязкой к складу и упаковкам.</p>
 
-<div class="card shadow-sm">
-  <div class="card-header d-flex justify-content-between align-items-center text-white"
-       style="background:linear-gradient(90deg,#0b2040,#0f3a6b)">
-    <div>
-      <div class="brand">Grace — Калькулятор заказа</div>
-      <div class="small text-white-50">Добавляйте колонки и строки, расчёт по строкам и итог с процентом</div>
-    </div>
-   <div class="d-flex gap-2 flex-wrap">
-  <button id="exportCsv"  class="btn btn-outline-light btn-sm btn-icon" title="Экспорт CSV"><i class="bi bi-filetype-csv"></i></button>
-  <button id="copyWord"   class="btn btn-outline-light btn-sm btn-icon" title="Копировать в Word"><i class="bi bi-file-earmark-word"></i></button>
-  <button id="sendTrello" class="btn btn-warning btn-sm btn-icon"       title="Отправить в Trello"><i class="bi bi-trello"></i></button>
-  <button id="sendSheets" class="btn btn-success btn-sm btn-icon"       title="Отправить в Google Sheets"><i class="bi bi-google"></i></button>
-  <button id="clearAll"   class="btn btn-outline-light btn-sm btn-icon" title="Очистить"><i class="bi bi-x-circle"></i></button>
-</div>
-
-
-  </div>
-
-  <div class="card-body">
-    <div class="row g-2 mb-3">
-      <div class="col-auto"><button id="addRow" class="btn btn-primary">+ Добавить строку</button></div>
-      <!-- <div class="col-auto"><button id="addColumn" class="btn btn-secondary">+ Добавить колонку</button></div> -->
-      <div class="col-auto"><button id="resetColumns" class="btn btn-outline-secondary">Сбросить доп. колонки</button></div>
-      <div class="col-auto ms-auto">
-        <input id="projectName" class="form-control" placeholder="Название проекта (для Trello/Sheets)">
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-header" style="background:linear-gradient(90deg,#0b2040,#0f3a6b); color:white;">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+          <div class="brand">Grace — расчёт для клиента</div>
+          <div class="small text-white-50">Заполните строки, нажмите «Посчитать» — итог появится ниже.</div>
+        </div>
+        <button type="submit" class="btn btn-light btn-sm">Посчитать</button>
       </div>
     </div>
-
-    <div class="table-responsive">
-      <table id="calcTable" class="table table-bordered table-hover align-middle bg-white">
-        <thead class="table-light">
-          <tr id="headerRow">
-            <th style="width:40px">#</th>
-            <th>Статья</th>
-            <th style="width:120px">Единица</th>
-            <th style="width:130px">Количество</th>
-            <th style="width:160px">Цена за ед. (₸)</th>
-            <th class="money">Общая сумма (₸)</th>
-            <th style="width:90px">Действие</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-    <div class="row mt-3 g-3">
-      <div class="col-md-6">
-        <div class="card p-3">
-          <div class="text-muted mb-2">Примечания / Информация</div>
-          <textarea id="notes" class="form-control" rows="5"
-                    placeholder="Условия, примечания, договор …"></textarea>
+    <div class="card-body">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label">Название расчёта</label>
+          {{ summary_form.project_name }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Наценка / налог, %</label>
+          {{ summary_form.margin_percent }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Примечания</label>
+          {{ summary_form.notes }}
         </div>
       </div>
 
-      <div class="col-md-6">
-        <div class="card p-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="text-muted">Итоги</div>
-            <div class="text-muted">Пересчёт автоматически</div>
-          </div>
-          <div class="d-flex justify-content-between">
-            <div>Промежуточная сумма:</div>
-            <div id="subtotal" class="fw-semibold">0.00 ₸</div>
-          </div>
-          <div class="d-flex justify-content-between mt-2 align-items-center">
-            <div class="me-2">Процент (маржа/налог) %</div>
-            <div style="width:150px">
-              <input id="percent" type="number" min="0" step="0.01" value="0"
-                     class="form-control input-num">
+      {{ item_formset.management_form }}
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <p class="text-muted small mb-0">Добавляйте материалы из склада или свои позиции.</p>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="add-row">
+          <i class="bi bi-plus-circle"></i> Добавить строку
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width:26px">#</th>
+              <th style="width:220px">Материал</th>
+              <th>Описание</th>
+              <th style="width:130px">Кол-во</th>
+              <th style="width:150px">Цена за ед.</th>
+              <th style="width:90px">Удалить</th>
+            </tr>
+          </thead>
+          <tbody id="calc-rows">
+            {% for form in item_formset.forms %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ form.product }}</td>
+                <td>{{ form.description }}</td>
+                <td>{{ form.quantity }}</td>
+                <td>{{ form.unit_price }}</td>
+                <td class="text-center">{{ form.DELETE }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted small">Материал можно выбрать из справочника склада. Если оставить пустым — позиция будет считаться по описанию.</p>
+      <button type="submit" class="btn btn-primary">Посчитать</button>
+    </div>
+  </div>
+</form>
+
+{% if line_results %}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Строки расчёта</span>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="copy-summary">
+            <i class="bi bi-clipboard"></i> Скопировать
+          </button>
+        </div>
+        <div class="list-group list-group-flush" id="calc-results">
+          {% for line in line_results %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="fw-semibold">{{ line.description|default:'Без описания' }}</div>
+                  {% if line.product %}
+                    <div class="text-muted small">{{ line.product.get_base_unit_display }}</div>
+                  {% endif %}
+                  {% if line.package_usage %}
+                    <div class="text-muted small">~ {{ line.package_usage.packages|floatformat:2 }} {{ line.package_usage.label }} (по {{ line.package_usage.size }} базовых ед. в штуке)</div>
+                  {% endif %}
+                </div>
+                <div class="text-end">
+                  <div class="text-muted">{{ line.quantity }} × {{ line.unit_price }} ₸</div>
+                  <div class="fw-bold">{{ line.line_total|floatformat:2 }} ₸</div>
+                </div>
+              </div>
             </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Промежуточная сумма</span>
+            <span class="fw-semibold">{{ totals.subtotal|floatformat:2 }} ₸</span>
           </div>
-          <div class="d-flex justify-content-between mt-2">
-            <div>Сумма по проценту:</div>
-            <div id="percentAmount" class="fw-semibold">0.00 ₸</div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Наценка, %</span>
+            <span>{{ totals.margin_percent|default_if_none:0|floatformat:2 }}%</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Сумма наценки</span>
+            <span class="fw-semibold">{{ totals.percent_amount|floatformat:2 }} ₸</span>
           </div>
           <hr>
-          <div class="d-flex justify-content-between">
-            <div class="fs-5">Итоговая сумма:</div>
-            <div id="grandTotal" class="fs-5 fw-bold">0.00 ₸</div>
+          <div class="d-flex justify-content-between fs-5">
+            <span>Итого</span>
+            <span class="fw-bold">{{ totals.grand_total|floatformat:2 }} ₸</span>
           </div>
+          {% if summary_form.cleaned_data.project_name %}
+            <div class="mt-3 text-muted small">{{ summary_form.cleaned_data.project_name }}</div>
+          {% endif %}
+          {% if summary_form.cleaned_data.notes %}
+            <div class="mt-1 small">{{ summary_form.cleaned_data.notes }}</div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
+{% endif %}
 
-  <div class="card-footer small text-muted sticky-footer">
-    <div class="d-flex justify-content-between">
-      <div>Grace — система расчётов</div>
-      <div>Экспорт CSV / Копия для Word / Интеграции</div>
-    </div>
-  </div>
-</div>
+{% with empty_form=item_formset.empty_form %}
+  <template id="calculator-row-template">
+    <tr>
+      <td data-row-counter></td>
+      <td>{{ empty_form.product }}</td>
+      <td>{{ empty_form.description }}</td>
+      <td>{{ empty_form.quantity }}</td>
+      <td>{{ empty_form.unit_price }}</td>
+      <td class="text-center">{{ empty_form.DELETE }}</td>
+    </tr>
+  </template>
+{% endwith %}
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'portal/js/app.js' %}"></script>
-<script src="{% static 'portal/js/trello.js' %}"></script>
-<script src="{% static 'portal/js/sheets.js' %}"></script>
+  {{ block.super }}
+  <script>
+    (function () {
+      const tableBody = document.getElementById('calc-rows');
+      const addBtn = document.getElementById('add-row');
+      const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+      const template = document.getElementById('calculator-row-template');
+
+      function refreshCounters() {
+        tableBody.querySelectorAll('tr').forEach((row, idx) => {
+          const cell = row.querySelector('[data-row-counter]');
+          if (cell) {
+            cell.textContent = idx + 1;
+          } else if (row.cells.length) {
+            row.cells[0].textContent = idx + 1;
+          }
+        });
+      }
+
+      function addRow() {
+        const totalForms = parseInt(totalFormsInput.value, 10);
+        const html = template.innerHTML.replace(/__prefix__/g, totalForms);
+        const wrapper = document.createElement('tbody');
+        wrapper.innerHTML = html.trim();
+        const newRow = wrapper.firstElementChild;
+        tableBody.appendChild(newRow);
+        totalFormsInput.value = totalForms + 1;
+        refreshCounters();
+      }
+
+      if (addBtn && template) {
+        addBtn.addEventListener('click', addRow);
+      }
+
+      refreshCounters();
+
+      const copyBtn = document.getElementById('copy-summary');
+      const results = document.getElementById('calc-results');
+      if (copyBtn && results) {
+        copyBtn.addEventListener('click', () => {
+          const lines = [];
+          results.querySelectorAll('.list-group-item').forEach((item) => {
+            const title = item.querySelector('.fw-semibold')?.textContent.trim() || '';
+            const price = item.querySelector('.fw-bold')?.textContent.trim() || '';
+            const meta = item.querySelectorAll('.text-muted.small');
+            const metaText = Array.from(meta).map((el) => el.textContent.trim()).join(' | ');
+            lines.push([title, metaText, price].filter(Boolean).join(' — '));
+          });
+          const total = document.querySelector('.card-body .fw-bold:last-child')?.textContent.trim();
+          if (total) {
+            lines.push('\nИтого: ' + total);
+          }
+          navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            copyBtn.innerHTML = '<i class="bi bi-check2"></i> Скопировано';
+            setTimeout(() => {
+              copyBtn.innerHTML = '<i class="bi bi-clipboard"></i> Скопировать';
+            }, 2000);
+          });
+        });
+      }
+    })();
+  </script>
 {% endblock %}
