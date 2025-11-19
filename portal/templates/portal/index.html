@@ -46,7 +46,11 @@
             <tbody>
               {% for order in recent_orders %}
                 <tr>
-                  <td>{{ order.title }}</td>
+                  <td>
+                    <a href="{% url 'portal:order_detail' order.pk %}" class="link-body-emphasis">
+                      {{ order.title }}
+                    </a>
+                  </td>
                   <td>{{ order.client.name }}</td>
                   <td>{{ order.get_status_display }}</td>
                   <td class="text-end">{{ order.total_amount }} ₸</td>

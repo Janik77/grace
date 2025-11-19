@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import formset_factory, modelformset_factory
 
-from .models import Client, InventoryItem, Order, OrderItem
+from .models import Client, Expense, InventoryItem, Order, OrderItem
 
 
 class ClientForm(forms.ModelForm):
@@ -12,9 +12,9 @@ class ClientForm(forms.ModelForm):
 
     class Meta:
         model = Client
-        fields = ["name", "contact_person", "email", "phone", "notes"]
+        fields = ["name", "phone", "address"]
         widgets = {
-            "notes": forms.Textarea(attrs={"rows": 2}),
+            "address": forms.TextInput(attrs={"placeholder": "Адрес клиента"}),
         }
 
 
@@ -27,9 +27,24 @@ class OrderForm(forms.ModelForm):
 
     class Meta:
         model = Order
+        fields = ["title", "due_date"]
+        widgets = {
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+class OrderDetailForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            css_class = "form-select" if field_name == "status" else "form-control"
+            field.widget.attrs.setdefault("class", css_class)
+
+    class Meta:
+        model = Order
         fields = ["title", "description", "status", "due_date"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 2}),
+            "description": forms.Textarea(attrs={"rows": 3}),
             "due_date": forms.DateInput(attrs={"type": "date"}),
         }
 
@@ -52,7 +67,7 @@ class OrderItemForm(forms.ModelForm):
 OrderItemFormSet = modelformset_factory(
     OrderItem,
     form=OrderItemForm,
-    extra=3,
+    extra=2,
     can_delete=True,
 )
 
@@ -115,3 +130,17 @@ class CalculatorItemForm(forms.Form):
 
 
 CalculatorItemFormSet = formset_factory(CalculatorItemForm, extra=3, can_delete=True)
+
+
+class ExpenseForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+
+    class Meta:
+        model = Expense
+        fields = ["supplier_name", "expense_date", "amount", "attachment", "description"]
+        widgets = {
+            "expense_date": forms.DateInput(attrs={"type": "date"}),
+        }

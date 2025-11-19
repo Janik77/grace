@@ -1,9 +1,10 @@
+from datetime import date
 from decimal import Decimal
 
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import F, Sum
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import Employee
 
@@ -11,10 +12,12 @@ from .forms import (
     CalculatorItemFormSet,
     CalculatorSummaryForm,
     ClientForm,
+    ExpenseForm,
+    OrderDetailForm,
     OrderForm,
     OrderItemFormSet,
 )
-from .models import InventoryItem, InventoryMovement, Order, OrderItem
+from .models import Expense, InventoryItem, Order, OrderItem
 
 
 def index(request):
@@ -84,13 +87,8 @@ def report(request):
     income_total = income_qs.aggregate(total=Sum("total_amount"))
     income_total = income_total.get("total") or Decimal("0")
 
-    expense_qs = (
-        InventoryMovement.objects.filter(direction=InventoryMovement.Direction.OUT)
-        .select_related("item")
-        .annotate(value=F("quantity") * F("item__default_unit_price"))
-        .order_by("-created_at")
-    )
-    expense_total = expense_qs.aggregate(total=Sum("value"))
+    expense_qs = Expense.objects.order_by("-expense_date")
+    expense_total = expense_qs.aggregate(total=Sum("amount"))
     expense_total = expense_total.get("total") or Decimal("0")
 
     context = {
@@ -171,11 +169,6 @@ def wizard(request):
         action = request.POST.get("action", "save_full")
         client_form = ClientForm(request.POST, prefix="client")
         order_form = OrderForm(request.POST, prefix="order")
-        item_formset = OrderItemFormSet(
-            request.POST,
-            queryset=OrderItem.objects.none(),
-            prefix="items",
-        )
 
         if action == "save_client":
             if client_form.is_valid():
@@ -187,38 +180,101 @@ def wizard(request):
                 return redirect("portal:wizard")
             messages.error(request, "Проверьте заполнение реквизитов клиента")
         else:
-            if all([client_form.is_valid(), order_form.is_valid(), item_formset.is_valid()]):
+            if all([client_form.is_valid(), order_form.is_valid()]):
                 with transaction.atomic():
                     client = client_form.save()
                     order = order_form.save(commit=False)
                     order.client = client
                     order.save()
 
-                    total = Decimal("0")
-                    for form in item_formset:
-                        if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
-                            item = form.save(commit=False)
-                            item.order = order
-                            item.save()
-                            total += item.quantity * item.unit_price
-
-                    order.total_amount = total
-                    order.save(update_fields=["total_amount"])
-
-                messages.success(request, "Заказ сохранён и появится в отчёте")
-                return redirect("portal:index")
+                messages.success(
+                    request,
+                    "Заказ сохранён. Добавьте детали и позиции из карточки заказа.",
+                )
+                return redirect("portal:order_detail", pk=order.pk)
             messages.error(request, "Исправьте ошибки в форме заказа")
     else:
         client_form = ClientForm(prefix="client")
         order_form = OrderForm(prefix="order")
-        item_formset = OrderItemFormSet(queryset=OrderItem.objects.none(), prefix="items")
 
     context = {
         "client_form": client_form,
         "order_form": order_form,
-        "item_formset": item_formset,
     }
     return render(request, "portal/wizard.html", context)
+
+
+def order_detail(request, pk):
+    order = get_object_or_404(
+        Order.objects.select_related("client"),
+        pk=pk,
+    )
+    can_edit = order.can_edit(request.user)
+
+    if request.method == "POST" and request.POST.get("action") == "toggle_lock":
+        if request.user.is_superuser:
+            order.is_locked = not order.is_locked
+            order.save(update_fields=["is_locked"])
+            state = "разблокирован" if not order.is_locked else "заблокирован"
+            messages.success(request, f"Заказ {state} для редактирования")
+        else:
+            messages.error(request, "Недостаточно прав для изменения статуса блокировки")
+        return redirect("portal:order_detail", pk=order.pk)
+
+    if request.method == "POST":
+        if not can_edit:
+            messages.warning(request, "Заказ заблокирован. Обратитесь к администратору.")
+            return redirect("portal:order_detail", pk=order.pk)
+
+        order_form = OrderDetailForm(request.POST, instance=order, prefix="order")
+        item_formset = OrderItemFormSet(
+            request.POST,
+            queryset=order.items.all(),
+            prefix="items",
+        )
+
+        if order_form.is_valid() and item_formset.is_valid():
+            order_form.save()
+            instances = item_formset.save(commit=False)
+            for obj in item_formset.deleted_objects:
+                obj.delete()
+            for obj in instances:
+                obj.order = order
+                obj.save()
+
+            total = (
+                order.items.all()
+                .aggregate(total=Sum(F("quantity") * F("unit_price")))
+                .get("total")
+                or Decimal("0")
+            )
+            order.total_amount = total
+            order.save(update_fields=["total_amount"])
+
+            messages.success(request, "Изменения сохранены")
+            return redirect("portal:order_detail", pk=order.pk)
+        else:
+            messages.error(request, "Проверьте форму заказа")
+    else:
+        order_form = OrderDetailForm(instance=order, prefix="order")
+        item_formset = OrderItemFormSet(queryset=order.items.all(), prefix="items")
+
+    if not can_edit:
+        for field in order_form.fields.values():
+            field.widget.attrs["disabled"] = True
+        for form in item_formset:
+            for field in form.fields.values():
+                field.widget.attrs["disabled"] = True
+            if "DELETE" in form.fields:
+                form.fields["DELETE"].widget.attrs["disabled"] = True
+
+    context = {
+        "order": order,
+        "order_form": order_form,
+        "item_formset": item_formset,
+        "can_edit": can_edit,
+    }
+    return render(request, "portal/order_detail.html", context)
 
 
 def help_page(request):
@@ -242,3 +298,19 @@ def staff(request):
 def inventory(request):
     items = InventoryItem.objects.all()
     return render(request, "portal/inventory.html", {"items": items})
+
+
+def expenses(request):
+    expenses_qs = Expense.objects.all()
+    if request.method == "POST":
+        form = ExpenseForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Расход добавлен")
+            return redirect("portal:expenses")
+        messages.error(request, "Проверьте форму расхода")
+    else:
+        form = ExpenseForm(initial={"expense_date": date.today()})
+
+    context = {"form": form, "expenses": expenses_qs}
+    return render(request, "portal/expenses.html", context)

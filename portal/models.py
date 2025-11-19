@@ -14,6 +14,7 @@ class Client(TimestampedModel):
     contact_person = models.CharField(max_length=255, blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=64, blank=True)
+    address = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
 
     def __str__(self) -> str:
@@ -34,12 +35,21 @@ class Order(TimestampedModel):
     status = models.CharField(max_length=32, choices=Status.choices, default=Status.DEVELOPMENT)
     due_date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_locked = models.BooleanField(
+        default=False,
+        help_text="Заблокированные заказы нельзя редактировать без прав супер-админа",
+    )
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return self.title
+
+    def can_edit(self, user) -> bool:
+        if not self.is_locked:
+            return True
+        return bool(user and user.is_superuser)
 
 
 class OrderItem(TimestampedModel):
@@ -122,3 +132,23 @@ class InventoryMovement(TimestampedModel):
     def __str__(self) -> str:
         prefix = "+" if self.direction == self.Direction.IN else "-"
         return f"{prefix}{self.quantity} {self.item.sku}"
+
+
+class Expense(TimestampedModel):
+    supplier_name = models.CharField("Поставщик", max_length=255)
+    expense_date = models.DateField("Дата")
+    amount = models.DecimalField("Сумма", max_digits=12, decimal_places=2)
+    attachment = models.FileField(
+        "Файл",
+        upload_to="expenses/",
+        blank=True,
+        null=True,
+        help_text="Фото чека или PDF",
+    )
+    description = models.CharField("Комментарий", max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-expense_date", "-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.supplier_name} — {self.amount}"

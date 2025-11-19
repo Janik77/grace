@@ -4,7 +4,7 @@
 
 {% block content %}
   <h1 class="page-title">Мастер заказа</h1>
-  <p class="page-sub">Можно сохранить только реквизиты клиента или оформить заказ целиком со статусом и позициями.</p>
+  <p class="page-sub">Сохраняем реквизиты и базовую информацию о заказе. Детали и позиции можно добавить позже в карточке заказа.</p>
 
   <form method="post" class="card shadow-sm">{% csrf_token %}
     <div class="card-body">
@@ -12,73 +12,27 @@
         <div class="col-lg-6">
           <div class="border rounded p-3 h-100">
             <div class="fw-semibold mb-2">1) Клиент</div>
-            <div class="row g-3">
-              {% for field in client_form %}
-                <div class="col-12{% if field.name in 'contact_person email phone' %} col-md-6{% endif %}">
-                  <label class="form-label">{{ field.label }}</label>
-                  {{ field }}
-                  {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                  {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                </div>
-              {% endfor %}
-            </div>
+            {% for field in client_form %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
           </div>
         </div>
 
         <div class="col-lg-6">
           <div class="border rounded p-3 h-100">
             <div class="fw-semibold mb-2">2) Заказ</div>
-            <p class="small text-muted mb-3">Статусы: «В разработке», «В офисе», «В цеху», «Монтаж», «Завершено».</p>
-            <div class="row g-3">
-              {% for field in order_form %}
-                <div class="col-12{% if field.name in 'due_date status' %} col-md-6{% endif %}">
-                  <label class="form-label">{{ field.label }}</label>
-                  {{ field }}
-                  {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <div class="border rounded p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="fw-semibold">3) Позиции</div>
-              <small class="text-muted">Блок необязательный — можно заполнить позже из отчёта</small>
-            </div>
-            {{ item_formset.management_form }}
-            <div class="row g-3">
-              {% for form in item_formset %}
-                <div class="col-12 col-xl-6">
-                  <div class="border rounded p-3 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="fw-semibold">Позиция {{ forloop.counter }}</div>
-                      <label class="form-check-label small">{{ form.DELETE }} Удалить</label>
-                    </div>
-                    <div class="mb-2">
-                      <label class="form-label">{{ form.title.label }}</label>
-                      {{ form.title }}
-                      {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="row g-2">
-                      <div class="col-sm-6">
-                        <label class="form-label">{{ form.quantity.label }}</label>
-                        {{ form.quantity }}
-                      </div>
-                      <div class="col-sm-6">
-                        <label class="form-label">{{ form.unit_price.label }}</label>
-                        {{ form.unit_price }}
-                      </div>
-                    </div>
-                    <div class="mt-2">
-                      <label class="form-label">{{ form.comment.label }}</label>
-                      {{ form.comment }}
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
+            <p class="small text-muted mb-3">Заполните название и плановую дату сдачи. Статус автоматически «В разработке».</p>
+            {% for field in order_form %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
           </div>
         </div>
       </div>

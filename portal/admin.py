@@ -1,12 +1,12 @@
 from django.contrib import admin
 
-from .models import Client, InventoryItem, InventoryMovement, Order, OrderItem
+from .models import Client, Expense, InventoryItem, InventoryMovement, Order, OrderItem
 
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ("name", "contact_person", "email", "phone", "created_at")
-    search_fields = ("name", "contact_person", "email", "phone")
+    list_display = ("name", "phone", "address", "contact_person", "email", "created_at")
+    search_fields = ("name", "phone", "address", "contact_person", "email")
 
 
 class OrderItemInline(admin.TabularInline):
@@ -16,8 +16,16 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("title", "client", "status", "due_date", "total_amount", "created_at")
-    list_filter = ("status", "due_date", "client")
+    list_display = (
+        "title",
+        "client",
+        "status",
+        "is_locked",
+        "due_date",
+        "total_amount",
+        "created_at",
+    )
+    list_filter = ("status", "due_date", "client", "is_locked")
     search_fields = ("title", "description", "client__name")
     date_hierarchy = "due_date"
     inlines = [OrderItemInline]
@@ -44,3 +52,10 @@ class InventoryItemAdmin(admin.ModelAdmin):
 class InventoryMovementAdmin(admin.ModelAdmin):
     list_display = ("item", "direction", "quantity", "reason", "created_at")
     list_filter = ("direction", "created_at")
+
+
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    list_display = ("supplier_name", "expense_date", "amount", "created_at")
+    list_filter = ("expense_date",)
+    search_fields = ("supplier_name", "description")

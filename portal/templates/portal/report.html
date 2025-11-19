@@ -3,7 +3,7 @@
 
 {% block content %}
   <h1 class="page-title">Финансовый отчёт</h1>
-  <p class="page-sub">Быстрый обзор доходов и расходов по заказам и складу.</p>
+  <p class="page-sub">Быстрый обзор доходов по заказам и расходов по закупкам материалов.</p>
 
   <div class="row row-cols-1 row-cols-md-3 g-3">
     <div class="col">
@@ -17,7 +17,7 @@
       <div class="card shadow-sm p-3 h-100 border-start border-3 border-danger">
         <div class="text-muted">Расход</div>
         <div class="display-6 fw-bold">{{ expense_total|default:0|floatformat:0 }} ₸</div>
-        <div class="small text-muted">Списание материалов со склада</div>
+        <div class="small text-muted">Закупки материалов</div>
       </div>
     </div>
     <div class="col">
@@ -60,22 +60,25 @@
 
     <div class="col-lg-6">
       <div class="card shadow-sm">
-        <div class="card-header">Расходы (списание склада)</div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>Расходы (закупки)</div>
+          <a href="{% url 'portal:expenses' %}" class="btn btn-sm btn-outline-primary">В журнал</a>
+        </div>
         <div class="table-responsive">
           <table class="table mb-0">
             <thead class="table-light">
-              <tr><th>Дата</th><th>Материал</th><th>Причина</th><th class="text-end">Сумма</th></tr>
+              <tr><th>Дата</th><th>Компания</th><th>Комментарий</th><th class="text-end">Сумма</th></tr>
             </thead>
             <tbody>
-              {% for movement in expense_rows %}
+              {% for expense in expense_rows %}
                 <tr>
-                  <td>{{ movement.created_at|date:'d.m.Y' }}</td>
-                  <td>{{ movement.item.name }}</td>
-                  <td>{{ movement.reason|default:'—' }}</td>
-                  <td class="text-end">{{ movement.value|default:0|floatformat:0 }} ₸</td>
+                  <td>{{ expense.expense_date|date:'d.m.Y' }}</td>
+                  <td>{{ expense.supplier_name }}</td>
+                  <td>{{ expense.description|default:'—' }}</td>
+                  <td class="text-end">{{ expense.amount|default:0|floatformat:0 }} ₸</td>
                 </tr>
               {% empty %}
-                <tr><td colspan="4" class="text-muted">Списание материалов пока не фиксировалось</td></tr>
+                <tr><td colspan="4" class="text-muted">Расходы пока не зафиксированы</td></tr>
               {% endfor %}
             </tbody>
           </table>
