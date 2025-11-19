@@ -1,20 +1,32 @@
 {% extends 'portal/base.html' %}
-{% block title %}Grace — Отчёт{% endblock %}
+{% block title %}Grace — Главная{% endblock %}
 
 {% block content %}
-  <h1 class="page-title">Отчёт и фронт для заказов</h1>
-  <p class="page-sub">Сводка по заказам и складу, быстрый переход к созданию заявки.</p>
+  <h1 class="page-title">Главная</h1>
+  <p class="page-sub">Быстрая сводка по заказам, складу и действиям.</p>
 
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-5 g-3">
-    {% for card in status_cards %}
-      <div class="col">
-        <div class="card shadow-sm p-3 h-100 border-start border-3 border-{{ card.accent }}">
-          <div class="text-muted">{{ card.label }}</div>
-          <div class="display-6 fw-bold">{{ card.count }}</div>
-          <div class="small text-muted">{{ card.description }}</div>
-        </div>
+  <div class="row row-cols-1 row-cols-md-3 g-3">
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">Активные заказы</div>
+        <div class="display-6 fw-bold">{{ status_summary.active }}</div>
+        <div class="small text-muted">Все статусы, кроме завершённых</div>
       </div>
-    {% endfor %}
+    </div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">В офисе</div>
+        <div class="display-6 fw-bold">{{ status_summary.office }}</div>
+        <div class="small text-muted">Документы и сметы</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">В цеху</div>
+        <div class="display-6 fw-bold">{{ status_summary.workshop }}</div>
+        <div class="small text-muted">Производство и подготовка</div>
+      </div>
+    </div>
   </div>
 
   <div class="row g-4 mt-1">
@@ -36,7 +48,7 @@
                 <tr>
                   <td>{{ order.title }}</td>
                   <td>{{ order.client.name }}</td>
-                  <td><span class="badge bg-secondary">{{ order.get_status_display }}</span></td>
+                  <td>{{ order.get_status_display }}</td>
                   <td class="text-end">{{ order.total_amount }} ₸</td>
                 </tr>
               {% empty %}
@@ -49,6 +61,20 @@
     </div>
 
     <div class="col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">Статусы заказов</div>
+        <ul class="list-group list-group-flush">
+          {% for card in status_cards %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ card.label }}</span>
+              <span class="badge bg-light text-dark">{{ card.count }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted">Нет данных по статусам</li>
+          {% endfor %}
+        </ul>
+      </div>
+
       <div class="card shadow-sm mb-3">
         <div class="card-header">Склад: минимум запасов</div>
         <ul class="list-group list-group-flush">

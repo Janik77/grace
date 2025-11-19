@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import F, Sum
 from django.shortcuts import redirect, render
 
 from accounts.models import Employee
@@ -13,7 +14,7 @@ from .forms import (
     OrderForm,
     OrderItemFormSet,
 )
-from .models import InventoryItem, Order, OrderItem
+from .models import InventoryItem, InventoryMovement, Order, OrderItem
 
 
 def index(request):
@@ -56,6 +57,12 @@ def index(request):
     for card in status_cards:
         card["count"] = counts.get(card["key"], 0)
 
+    status_summary = {
+        "active": sum(counts.values()) - counts.get(Order.Status.DONE, 0),
+        "office": counts.get(Order.Status.OFFICE, 0),
+        "workshop": counts.get(Order.Status.WORKSHOP, 0),
+    }
+
     recent_orders = (
         Order.objects.select_related("client")
         .prefetch_related("items")
@@ -65,10 +72,35 @@ def index(request):
 
     context = {
         "status_cards": status_cards,
+        "status_summary": status_summary,
         "recent_orders": recent_orders,
         "low_stock": low_stock,
     }
     return render(request, "portal/index.html", context)
+
+
+def report(request):
+    income_qs = Order.objects.select_related("client").order_by("-created_at")
+    income_total = income_qs.aggregate(total=Sum("total_amount"))
+    income_total = income_total.get("total") or Decimal("0")
+
+    expense_qs = (
+        InventoryMovement.objects.filter(direction=InventoryMovement.Direction.OUT)
+        .select_related("item")
+        .annotate(value=F("quantity") * F("item__default_unit_price"))
+        .order_by("-created_at")
+    )
+    expense_total = expense_qs.aggregate(total=Sum("value"))
+    expense_total = expense_total.get("total") or Decimal("0")
+
+    context = {
+        "income_total": income_total,
+        "expense_total": expense_total,
+        "net_total": income_total - expense_total,
+        "income_rows": income_qs[:10],
+        "expense_rows": expense_qs[:10],
+    }
+    return render(request, "portal/report.html", context)
 
 
 def order(request):
