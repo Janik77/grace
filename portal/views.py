@@ -13,18 +13,48 @@ from .forms import (
     OrderForm,
     OrderItemFormSet,
 )
-from .models import InventoryItem, Order
+from .models import InventoryItem, Order, OrderItem
 
 
 def index(request):
-    active_statuses = [
-        Order.Status.DRAFT,
-        Order.Status.IN_PROGRESS,
-        Order.Status.ON_HOLD,
+    status_cards = [
+        {
+            "key": Order.Status.DEVELOPMENT,
+            "label": "В разработке",
+            "description": "Макеты, расчёты",
+            "accent": "primary",
+        },
+        {
+            "key": Order.Status.OFFICE,
+            "label": "В офисе",
+            "description": "Подготовка документов",
+            "accent": "info",
+        },
+        {
+            "key": Order.Status.WORKSHOP,
+            "label": "В цеху",
+            "description": "Производство",
+            "accent": "warning",
+        },
+        {
+            "key": Order.Status.INSTALLATION,
+            "label": "Монтаж",
+            "description": "Выезды и монтаж",
+            "accent": "secondary",
+        },
+        {
+            "key": Order.Status.DONE,
+            "label": "Завершено",
+            "description": "Сданы клиенту",
+            "accent": "success",
+        },
     ]
-    active_orders_count = Order.objects.filter(status__in=active_statuses).count()
-    done_orders_count = Order.objects.filter(status=Order.Status.DONE).count()
-    cancelled_orders_count = Order.objects.filter(status=Order.Status.CANCELLED).count()
+
+    counts = {
+        card["key"]: Order.objects.filter(status=card["key"]).count() for card in status_cards
+    }
+    for card in status_cards:
+        card["count"] = counts.get(card["key"], 0)
 
     recent_orders = (
         Order.objects.select_related("client")
@@ -34,9 +64,7 @@ def index(request):
     low_stock = InventoryItem.objects.order_by("quantity_on_hand")[:5]
 
     context = {
-        "active_orders_count": active_orders_count,
-        "done_orders_count": done_orders_count,
-        "cancelled_orders_count": cancelled_orders_count,
+        "status_cards": status_cards,
         "recent_orders": recent_orders,
         "low_stock": low_stock,
     }
@@ -108,35 +136,50 @@ def order(request):
 
 def wizard(request):
     if request.method == "POST":
+        action = request.POST.get("action", "save_full")
         client_form = ClientForm(request.POST, prefix="client")
         order_form = OrderForm(request.POST, prefix="order")
-        item_formset = OrderItemFormSet(request.POST, queryset=OrderItemFormSet.model.objects.none(), prefix="items")
+        item_formset = OrderItemFormSet(
+            request.POST,
+            queryset=OrderItem.objects.none(),
+            prefix="items",
+        )
 
-        if all([client_form.is_valid(), order_form.is_valid(), item_formset.is_valid()]):
-            with transaction.atomic():
+        if action == "save_client":
+            if client_form.is_valid():
                 client = client_form.save()
-                order = order_form.save(commit=False)
-                order.client = client
-                order.save()
+                messages.success(
+                    request,
+                    f"Реквизиты клиента «{client.name}» сохранены. Заказ можно оформить позже.",
+                )
+                return redirect("portal:wizard")
+            messages.error(request, "Проверьте заполнение реквизитов клиента")
+        else:
+            if all([client_form.is_valid(), order_form.is_valid(), item_formset.is_valid()]):
+                with transaction.atomic():
+                    client = client_form.save()
+                    order = order_form.save(commit=False)
+                    order.client = client
+                    order.save()
 
-                total = Decimal("0")
-                for form in item_formset:
-                    if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
-                        item = form.save(commit=False)
-                        item.order = order
-                        item.save()
-                        total += item.quantity * item.unit_price
+                    total = Decimal("0")
+                    for form in item_formset:
+                        if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                            item = form.save(commit=False)
+                            item.order = order
+                            item.save()
+                            total += item.quantity * item.unit_price
 
-                order.total_amount = total
-                order.save(update_fields=["total_amount"])
+                    order.total_amount = total
+                    order.save(update_fields=["total_amount"])
 
-            messages.success(request, "Заказ сохранён")
-            return redirect("portal:index")
-        messages.error(request, "Исправьте ошибки в форме")
+                messages.success(request, "Заказ сохранён и появится в отчёте")
+                return redirect("portal:index")
+            messages.error(request, "Исправьте ошибки в форме заказа")
     else:
         client_form = ClientForm(prefix="client")
         order_form = OrderForm(prefix="order")
-        item_formset = OrderItemFormSet(queryset=OrderItemFormSet.model.objects.none(), prefix="items")
+        item_formset = OrderItemFormSet(queryset=OrderItem.objects.none(), prefix="items")
 
     context = {
         "client_form": client_form,

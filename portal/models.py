@@ -22,16 +22,16 @@ class Client(TimestampedModel):
 
 class Order(TimestampedModel):
     class Status(models.TextChoices):
-        DRAFT = "draft", "Черновик"
-        IN_PROGRESS = "in_progress", "В работе"
-        ON_HOLD = "on_hold", "На паузе"
-        DONE = "done", "Завершён"
-        CANCELLED = "cancelled", "Отменён"
+        DEVELOPMENT = "development", "В разработке"
+        OFFICE = "office", "В офисе"
+        WORKSHOP = "workshop", "В цеху"
+        INSTALLATION = "installation", "Монтаж"
+        DONE = "done", "Завершено"
 
     title = models.CharField(max_length=255)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="orders")
     description = models.TextField(blank=True)
-    status = models.CharField(max_length=32, choices=Status.choices, default=Status.DRAFT)
+    status = models.CharField(max_length=32, choices=Status.choices, default=Status.DEVELOPMENT)
     due_date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 

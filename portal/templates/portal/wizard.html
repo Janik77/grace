@@ -4,7 +4,7 @@
 
 {% block content %}
   <h1 class="page-title">Мастер заказа</h1>
-  <p class="page-sub">Оформите клиента, заказ и позиции. После сохранения появится в сводке.</p>
+  <p class="page-sub">Можно сохранить только реквизиты клиента или оформить заказ целиком со статусом и позициями.</p>
 
   <form method="post" class="card shadow-sm">{% csrf_token %}
     <div class="card-body">
@@ -28,6 +28,7 @@
         <div class="col-lg-6">
           <div class="border rounded p-3 h-100">
             <div class="fw-semibold mb-2">2) Заказ</div>
+            <p class="small text-muted mb-3">Статусы: «В разработке», «В офисе», «В цеху», «Монтаж», «Завершено».</p>
             <div class="row g-3">
               {% for field in order_form %}
                 <div class="col-12{% if field.name in 'due_date status' %} col-md-6{% endif %}">
@@ -44,7 +45,7 @@
           <div class="border rounded p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <div class="fw-semibold">3) Позиции</div>
-              <small class="text-muted">Добавьте до трёх строк сразу, лишние можно удалить</small>
+              <small class="text-muted">Блок необязательный — можно заполнить позже из отчёта</small>
             </div>
             {{ item_formset.management_form }}
             <div class="row g-3">
@@ -82,9 +83,12 @@
         </div>
       </div>
     </div>
-    <div class="card-footer d-flex justify-content-between">
-      <div class="text-muted">После сохранения заказ попадёт в отчёт и будет доступен в админке</div>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить заказ</button>
+    <div class="card-footer d-flex flex-column flex-md-row justify-content-between gap-2">
+      <div class="text-muted">Сохраните только реквизиты или сразу полный заказ. Позиции можно добавить позже.</div>
+      <div class="btn-group">
+        <button type="submit" name="action" value="save_client" class="btn btn-outline-secondary">Только реквизиты</button>
+        <button type="submit" name="action" value="save_full" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить заказ</button>
+      </div>
     </div>
   </form>
 {% endblock %}
