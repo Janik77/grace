@@ -1,7 +1,7 @@
 from django import forms
-from django.forms import modelformset_factory
+from django.forms import formset_factory, modelformset_factory
 
-from .models import Client, Order, OrderItem
+from .models import Client, InventoryItem, Order, OrderItem
 
 
 class ClientForm(forms.ModelForm):
@@ -55,3 +55,68 @@ OrderItemFormSet = modelformset_factory(
     extra=3,
     can_delete=True,
 )
+
+
+class CalculatorSummaryForm(forms.Form):
+    project_name = forms.CharField(
+        required=False,
+        label="Название расчёта",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Проект / заказ"}),
+    )
+    margin_percent = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_digits=5,
+        decimal_places=2,
+        label="Наценка / налог, %",
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "value": "0"}),
+    )
+    notes = forms.CharField(
+        required=False,
+        label="Примечания",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+
+
+class CalculatorItemForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=InventoryItem.objects.order_by("name"),
+        required=False,
+        label="Материал",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    description = forms.CharField(
+        required=False,
+        label="Что считаем",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Баннер, плёнка…"}),
+    )
+    quantity = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        label="Кол-во",
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    unit_price = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=0,
+        label="Цена за ед.",
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    comment = forms.CharField(
+        required=False,
+        label="Комментарий",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 1}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        product = cleaned.get("product")
+        description = cleaned.get("description")
+        if product and not description:
+            cleaned["description"] = product.name
+        return cleaned
+
+
+CalculatorItemFormSet = formset_factory(CalculatorItemForm, extra=3, can_delete=True)

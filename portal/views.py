@@ -6,7 +6,13 @@ from django.shortcuts import redirect, render
 
 from accounts.models import Employee
 
-from .forms import ClientForm, OrderForm, OrderItemFormSet
+from .forms import (
+    CalculatorItemFormSet,
+    CalculatorSummaryForm,
+    ClientForm,
+    OrderForm,
+    OrderItemFormSet,
+)
 from .models import InventoryItem, Order
 
 
@@ -38,7 +44,67 @@ def index(request):
 
 
 def order(request):
-    return render(request, "portal/order.html")
+    summary_form = CalculatorSummaryForm(prefix="summary")
+    item_formset = CalculatorItemFormSet(prefix="items")
+    line_results = []
+    totals = None
+
+    if request.method == "POST":
+        summary_form = CalculatorSummaryForm(request.POST, prefix="summary")
+        item_formset = CalculatorItemFormSet(request.POST, prefix="items")
+
+        if summary_form.is_valid() and item_formset.is_valid():
+            subtotal = Decimal("0")
+            for form in item_formset:
+                if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                    data = form.cleaned_data
+                    product = data.get("product")
+                    quantity = data.get("quantity")
+                    unit_price = data.get("unit_price")
+                    line_total = quantity * unit_price
+                    subtotal += line_total
+
+                    package_usage = None
+                    if product and product.package_size:
+                        packages = quantity / product.package_size
+                        package_usage = {
+                            "label": product.get_package_label(),
+                            "size": product.package_size,
+                            "packages": packages,
+                        }
+
+                    line_results.append(
+                        {
+                            "product": product,
+                            "description": data.get("description") or (product.name if product else ""),
+                            "quantity": quantity,
+                            "unit_price": unit_price,
+                            "line_total": line_total,
+                            "comment": data.get("comment"),
+                            "package_usage": package_usage,
+                        }
+                    )
+
+            margin_percent = summary_form.cleaned_data.get("margin_percent") or Decimal("0")
+            percent_amount = subtotal * margin_percent / Decimal("100")
+            grand_total = subtotal + percent_amount
+
+            totals = {
+                "subtotal": subtotal,
+                "margin_percent": margin_percent,
+                "percent_amount": percent_amount,
+                "grand_total": grand_total,
+            }
+        else:
+            messages.error(request, "Проверьте заполнение строк и параметров расчёта")
+
+    context = {
+        "summary_form": summary_form,
+        "item_formset": item_formset,
+        "line_results": line_results,
+        "totals": totals,
+    }
+    return render(request, "portal/order.html", context)
 
 
 def wizard(request):
@@ -97,3 +163,8 @@ def staff(request):
     )
     context = {"employees": employees}
     return render(request, "portal/staff.html", context)
+
+
+def inventory(request):
+    items = InventoryItem.objects.all()
+    return render(request, "portal/inventory.html", {"items": items})

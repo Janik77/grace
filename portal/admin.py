@@ -25,8 +25,19 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "quantity_on_hand", "location", "updated_at")
-    search_fields = ("sku", "name", "location")
+    list_display = (
+        "sku",
+        "name",
+        "category",
+        "base_unit",
+        "quantity_on_hand",
+        "package_size",
+        "default_unit_price",
+        "location",
+        "updated_at",
+    )
+    search_fields = ("sku", "name", "location", "category")
+    list_filter = ("base_unit", "category")
 
 
 @admin.register(InventoryMovement)

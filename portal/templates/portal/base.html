@@ -53,6 +53,7 @@
         <a href="{% url 'portal:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Отчёт / Главная</a>
         <a href="{% url 'portal:order' %}" class="{% if request.resolver_match.url_name == 'order' %}active{% endif %}">Калькулятор</a>
         <a href="{% url 'portal:wizard' %}" class="{% if request.resolver_match.url_name == 'wizard' %}active{% endif %}">Мастер заказов</a>
+        <a href="{% url 'portal:inventory' %}" class="{% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">Склад</a>
         <a href="{% url 'portal:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">Помощь</a>
         <a href="{% url 'portal:directory' %}" class="{% if request.resolver_match.url_name == 'directory' %}active{% endif %}">Справочник</a>
         <a href="{% url 'portal:staff' %}" class="{% if request.resolver_match.url_name == 'staff' %}active{% endif %}">Сотрудники</a>

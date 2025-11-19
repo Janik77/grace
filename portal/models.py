@@ -61,9 +61,30 @@ class OrderItem(TimestampedModel):
 
 
 class InventoryItem(TimestampedModel):
+    class Unit(models.TextChoices):
+        METER = "m", "Метры"
+        PIECE = "pcs", "Штуки"
+        SHEET = "sheet", "Листы"
+        SQUARE_METER = "sqm", "Кв. метры"
+
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
-    quantity_on_hand = models.IntegerField(default=0)
+    category = models.CharField(max_length=150, blank=True)
+    base_unit = models.CharField(max_length=10, choices=Unit.choices, default=Unit.PIECE)
+    package_size = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Сколько базовых единиц в упаковке (например, 50 м в рулоне)",
+    )
+    package_unit_label = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Название упаковки: рулон, пачка, коробка…",
+    )
+    default_unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    quantity_on_hand = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     location = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
 
@@ -72,6 +93,17 @@ class InventoryItem(TimestampedModel):
 
     def __str__(self) -> str:
         return f"{self.sku} — {self.name}"
+
+    @property
+    def package_count(self):
+        if self.package_size:
+            return float(self.quantity_on_hand) / float(self.package_size)
+        return None
+
+    def get_package_label(self) -> str:
+        if self.package_unit_label:
+            return self.package_unit_label
+        return "упаковка"
 
 
 class InventoryMovement(TimestampedModel):
