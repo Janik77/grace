@@ -80,7 +80,6 @@ def order(request):
                             "quantity": quantity,
                             "unit_price": unit_price,
                             "line_total": line_total,
-                            "comment": data.get("comment"),
                             "package_usage": package_usage,
                         }
                     )

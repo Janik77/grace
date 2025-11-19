@@ -104,11 +104,6 @@ class CalculatorItemForm(forms.Form):
         label="Цена за ед.",
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
     )
-    comment = forms.CharField(
-        required=False,
-        label="Комментарий",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 1}),
-    )
 
     def clean(self):
         cleaned = super().clean()
