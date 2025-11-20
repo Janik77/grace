@@ -43,56 +43,57 @@
                 {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
               </div>
             {% endfor %}
+            <div class="alert alert-light mb-0">
+              <div class="fw-semibold">Итог по заказу</div>
+              <div class="display-6 fw-bold">{{ order.total_amount|default:0 }} ₸</div>
+              <div class="text-muted small">Сумма пересчитывается из позиций ниже.</div>
+            </div>
           </div>
         </div>
         <div class="col-lg-8">
           <div class="border rounded p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="fw-semibold">Позиции заказа</div>
-              <small class="text-muted">Всего строк: {{ order.items.count }}</small>
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <div>
+                <div class="fw-semibold">Позиции заказа</div>
+                <div class="text-muted small">Количество строк: {{ order.items.count }}</div>
+              </div>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'portal:order' %}"><i class="bi bi-calculator"></i> Открыть калькулятор</a>
+              </div>
             </div>
             {{ item_formset.management_form }}
-            <div class="row g-3">
-              {% for form in item_formset %}
-                {% if can_edit or form.instance.pk %}
-                <div class="col-12">
-                  <div class="border rounded p-3 h-100">
-                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="fw-semibold">Позиция {{ forloop.counter }}</div>
-                      {% if can_edit %}
-                        <label class="form-check-label small">{{ form.DELETE }} Удалить</label>
-                      {% endif %}
-                    </div>
-                    <div class="mb-2">
-                      <label class="form-label">{{ form.title.label }}</label>
-                      {{ form.title }}
-                      {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="row g-2">
-                      <div class="col-sm-6">
-                        <label class="form-label">{{ form.quantity.label }}</label>
-                        {{ form.quantity }}
-                      </div>
-                      <div class="col-sm-6">
-                        <label class="form-label">{{ form.unit_price.label }}</label>
-                        {{ form.unit_price }}
-                      </div>
-                    </div>
-                    <div class="mt-2">
-                      <label class="form-label">{{ form.comment.label }}</label>
-                      {{ form.comment }}
-                    </div>
-                  </div>
-                </div>
-                {% endif %}
-              {% endfor %}
-              {% if not can_edit and not order.items.exists %}
-                <div class="col-12">
-                  <div class="alert alert-light mb-0">Позиции ещё не добавлены.</div>
-                </div>
-              {% endif %}
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead class="table-light">
+                  <tr><th>Название</th><th class="text-end">Кол-во</th><th class="text-end">Цена</th><th class="text-end">Сумма</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {% for form in item_formset %}
+                    {% if can_edit or form.instance.pk %}
+                      <tr>
+                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <td class="w-50">{{ form.title }}</td>
+                        <td class="text-end">{{ form.quantity }}</td>
+                        <td class="text-end">{{ form.unit_price }}</td>
+                        <td class="text-end">
+                          {% if form.instance.pk %}
+                            {{ form.instance.total }} ₸
+                          {% else %}
+                            —
+                          {% endif %}
+                        </td>
+                        <td class="text-end">
+                          {% if can_edit %}<label class="form-check-label small">{{ form.DELETE }} Удалить</label>{% endif %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
+            {% if not can_edit and not order.items.exists %}
+              <div class="alert alert-light mb-0">Позиции ещё не добавлены.</div>
+            {% endif %}
           </div>
         </div>
       </div>

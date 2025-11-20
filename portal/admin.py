@@ -20,14 +20,15 @@ class OrderAdmin(admin.ModelAdmin):
         "title",
         "client",
         "status",
-        "is_locked",
-        "due_date",
+        "start_date",
+        "end_date",
         "total_amount",
+        "is_locked",
         "created_at",
     )
-    list_filter = ("status", "due_date", "client", "is_locked")
+    list_filter = ("status", "start_date", "end_date", "client", "is_locked")
     search_fields = ("title", "description", "client__name")
-    date_hierarchy = "due_date"
+    date_hierarchy = "end_date"
     inlines = [OrderItemInline]
 
 

@@ -27,9 +27,10 @@ class OrderForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ["title", "due_date"]
+        fields = ["title", "start_date", "end_date"]
         widgets = {
-            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
         }
 
 
@@ -42,10 +43,11 @@ class OrderDetailForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ["title", "description", "status", "due_date"]
+        fields = ["title", "description", "status", "start_date", "end_date"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
-            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
         }
 
 
@@ -58,16 +60,13 @@ class OrderItemForm(forms.ModelForm):
 
     class Meta:
         model = OrderItem
-        fields = ["title", "quantity", "unit_price", "comment"]
-        widgets = {
-            "comment": forms.Textarea(attrs={"rows": 1}),
-        }
+        fields = ["title", "quantity", "unit_price"]
 
 
 OrderItemFormSet = modelformset_factory(
     OrderItem,
     form=OrderItemForm,
-    extra=2,
+    extra=1,
     can_delete=True,
 )
 

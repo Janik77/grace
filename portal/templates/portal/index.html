@@ -5,12 +5,19 @@
   <h1 class="page-title">Главная</h1>
   <p class="page-sub">Быстрая сводка по заказам, складу и действиям.</p>
 
-  <div class="row row-cols-1 row-cols-md-3 g-3">
+  <div class="row row-cols-1 row-cols-md-4 g-3">
     <div class="col">
       <div class="card shadow-sm p-3 h-100">
-        <div class="text-muted">Активные заказы</div>
+        <div class="text-muted">Заказы всего</div>
+        <div class="display-6 fw-bold">{{ status_summary.total }}</div>
+        <div class="small text-muted">Все созданные записи</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">Активные</div>
         <div class="display-6 fw-bold">{{ status_summary.active }}</div>
-        <div class="small text-muted">Все статусы, кроме завершённых</div>
+        <div class="small text-muted">Все кроме завершённых</div>
       </div>
     </div>
     <div class="col">
@@ -22,9 +29,9 @@
     </div>
     <div class="col">
       <div class="card shadow-sm p-3 h-100">
-        <div class="text-muted">В цеху</div>
+        <div class="text-muted">В цеху / монтаж</div>
         <div class="display-6 fw-bold">{{ status_summary.workshop }}</div>
-        <div class="small text-muted">Производство и подготовка</div>
+        <div class="small text-muted">Производство и выезд</div>
       </div>
     </div>
   </div>

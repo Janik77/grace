@@ -61,9 +61,11 @@ def index(request):
         card["count"] = counts.get(card["key"], 0)
 
     status_summary = {
+        "total": Order.objects.count(),
         "active": sum(counts.values()) - counts.get(Order.Status.DONE, 0),
         "office": counts.get(Order.Status.OFFICE, 0),
-        "workshop": counts.get(Order.Status.WORKSHOP, 0),
+        "workshop": counts.get(Order.Status.WORKSHOP, 0) + counts.get(Order.Status.INSTALLATION, 0),
+        "done": counts.get(Order.Status.DONE, 0),
     }
 
     recent_orders = (
