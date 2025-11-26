@@ -1,35 +1,127 @@
 {% extends 'portal/base.html' %}
-{% block title %}Grace — Отчёт{% endblock %}
+{% block title %}Grace — Главная{% endblock %}
 
 {% block content %}
-  <h1 class="page-title">Отчёт</h1>
-  <p class="page-sub">Ключевые показатели и быстрые ссылки.</p>
+  <h1 class="page-title">Главная</h1>
+  <p class="page-sub">Быстрая сводка по заказам, складу и действиям.</p>
 
-  <div class="grid cols-3">
-    <div class="card">
-      <div class="card__title">Активные заказы</div>
-      <div class="kpi">—</div>
-      <div class="text-muted">Подтянем из БД позже</div>
+  <div class="row row-cols-1 row-cols-md-4 g-3">
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">Заказы всего</div>
+        <div class="display-6 fw-bold">{{ status_summary.total }}</div>
+        <div class="small text-muted">Все созданные записи</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card__title">На согласовании</div>
-      <div class="kpi">—</div>
-      <div class="text-muted">Этап «Дизайнер / визуал»</div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">Активные</div>
+        <div class="display-6 fw-bold">{{ status_summary.active }}</div>
+        <div class="small text-muted">Все кроме завершённых</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card__title">В работе цеха</div>
-      <div class="kpi">—</div>
-      <div class="text-muted">Печать · Резка · Сборка</div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">В офисе</div>
+        <div class="display-6 fw-bold">{{ status_summary.office }}</div>
+        <div class="small text-muted">Документы и сметы</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card shadow-sm p-3 h-100">
+        <div class="text-muted">В цеху / монтаж</div>
+        <div class="display-6 fw-bold">{{ status_summary.workshop }}</div>
+        <div class="small text-muted">Производство и выезд</div>
+      </div>
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px">
-    <div class="card__title">Последние операции</div>
-    <table class="table">
-      <thead><tr><th>Дата</th><th>Проект</th><th>Статус</th><th></th></tr></thead>
-      <tbody>
-        <tr><td>—</td><td>—</td><td><span class="badge">—</span></td><td><a href="{% url 'portal:wizard' %}" class="btn btn-ghost">Открыть</a></td></tr>
-      </tbody>
-    </table>
+  <div class="row g-4 mt-1">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            Последние заказы — {{ order_month.month_label }}
+          </div>
+          <div class="btn-group">
+            {% if order_month.previous_month %}
+              <a class="btn btn-sm btn-outline-secondary" href="?month={{ order_month.previous_month|date:'Y-m' }}">Пред.</a>
+            {% endif %}
+            <span class="btn btn-sm btn-light disabled">{{ order_month.month_label }}</span>
+            {% if order_month.next_month %}
+              <a class="btn btn-sm btn-outline-secondary" href="?month={{ order_month.next_month|date:'Y-m' }}">След.</a>
+            {% endif %}
+          </div>
+          <a class="btn btn-sm btn-primary" href="{% url 'portal:wizard' %}">
+            <i class="bi bi-plus-circle"></i> Новый заказ
+          </a>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>Заказ</th><th>Клиент</th><th>Статус</th><th class="text-end">Сумма</th></tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+                <tr>
+                  <td>
+                    <a href="{% url 'portal:order_detail' order.pk %}" class="link-body-emphasis">
+                      {{ order.title }}
+                    </a>
+                  </td>
+                  <td>{{ order.client.name }}</td>
+                  <td>{{ order.get_status_display }}</td>
+                  <td class="text-end">{{ order.total_amount }} ₸</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" class="text-muted">Нет заказов — создайте первый в мастере</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">Статусы заказов</div>
+        <ul class="list-group list-group-flush">
+          {% for card in status_cards %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ card.label }}</span>
+              <span class="badge bg-light text-dark">{{ card.count }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted">Нет данных по статусам</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">Склад: минимум запасов</div>
+        <ul class="list-group list-group-flush">
+          {% for item in low_stock %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">{{ item.name }}</div>
+                <div class="text-muted small">{{ item.sku }}</div>
+              </div>
+              <span class="badge bg-warning text-dark">{{ item.quantity_on_hand }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted">Пока нет данных по складу</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card shadow-sm p-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bi bi-lightning-charge text-warning me-2"></i>
+          <div class="fw-semibold">Быстрый старт</div>
+        </div>
+        <p class="text-muted mb-2">Создайте заказ, выберите статус и позиции через мастер.</p>
+        <a class="btn btn-outline-primary w-100" href="{% url 'portal:wizard' %}">Перейти в мастер</a>
+      </div>
+    </div>
   </div>
 {% endblock %}
