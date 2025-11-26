@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import formset_factory, modelformset_factory
 
-from .models import Client, Expense, InventoryItem, InventoryUsage, Order, OrderItem
+from .models import Client, Expense, InventoryItem, Order, OrderItem
 
 
 class ClientForm(forms.ModelForm):
@@ -142,19 +142,4 @@ class ExpenseForm(forms.ModelForm):
         fields = ["supplier_name", "expense_date", "amount", "attachment", "description"]
         widgets = {
             "expense_date": forms.DateInput(attrs={"type": "date"}),
-        }
-
-
-class InventoryUsageForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            css_class = "form-select" if name in {"item", "project"} else "form-control"
-            field.widget.attrs.setdefault("class", css_class)
-
-    class Meta:
-        model = InventoryUsage
-        fields = ["usage_date", "item", "quantity", "project", "comment"]
-        widgets = {
-            "usage_date": forms.DateInput(attrs={"type": "date"}),
         }

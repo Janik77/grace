@@ -11,7 +11,6 @@ urlpatterns = [
     path('orders/<int:pk>/', views.order_detail, name='order_detail'),
     path('report/', views.report, name='report'),
     path('expenses/', views.expenses, name='expenses'),
-    path('usage/', views.usage, name='usage'),
     path('inventory/', views.inventory, name='inventory'),
     path('help/', views.help_page, name='help'),
     path('directory/', views.directory, name='directory'),

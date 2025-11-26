@@ -1,14 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    Client,
-    Expense,
-    InventoryItem,
-    InventoryMovement,
-    InventoryUsage,
-    Order,
-    OrderItem,
-)
+from .models import Client, Expense, InventoryItem, InventoryMovement, Order, OrderItem
 
 
 @admin.register(Client)
@@ -68,10 +60,3 @@ class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("supplier_name", "expense_date", "amount", "created_at")
     list_filter = ("expense_date",)
     search_fields = ("supplier_name", "description")
-
-
-@admin.register(InventoryUsage)
-class InventoryUsageAdmin(admin.ModelAdmin):
-    list_display = ("usage_date", "item", "quantity", "project", "comment", "created_at")
-    list_filter = ("usage_date", "item")
-    search_fields = ("item__name", "comment", "project__title")

@@ -55,7 +55,6 @@
         <a href="{% url 'portal:wizard' %}" class="{% if request.resolver_match.url_name == 'wizard' %}active{% endif %}">Мастер заказов</a>
         <a href="{% url 'portal:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}">Отчёт</a>
         <a href="{% url 'portal:expenses' %}" class="{% if request.resolver_match.url_name == 'expenses' %}active{% endif %}">Расходы</a>
-        <a href="{% url 'portal:usage' %}" class="{% if request.resolver_match.url_name == 'usage' %}active{% endif %}">Учёт расходов</a>
         <a href="{% url 'portal:inventory' %}" class="{% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">Склад</a>
         <a href="{% url 'portal:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">Помощь</a>
         <a href="{% url 'portal:directory' %}" class="{% if request.resolver_match.url_name == 'directory' %}active{% endif %}">Справочник</a>
@@ -66,10 +65,7 @@
           <i class="bi bi-plus-circle"></i> Новый заказ
         </a>
         <a href="{% url 'portal:expenses' %}">
-          <i class="bi bi-receipt"></i> Учесть закупку
-        </a>
-        <a href="{% url 'portal:usage' %}">
-          <i class="bi bi-box-arrow-up"></i> Списание со склада
+          <i class="bi bi-receipt"></i> Учесть расход
         </a>
       </div>
     </aside>

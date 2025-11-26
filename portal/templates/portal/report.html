@@ -2,21 +2,8 @@
 {% block title %}Grace — Отчёт{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <div>
-      <h1 class="page-title mb-0">Финансовый отчёт</h1>
-      <p class="page-sub mb-0">Быстрый обзор доходов по заказам и расходов по закупкам материалов.</p>
-    </div>
-    <div class="btn-group">
-      {% if report_month.previous_month %}
-        <a class="btn btn-outline-secondary" href="?month={{ report_month.previous_month|date:'Y-m' }}">Пред.</a>
-      {% endif %}
-      <span class="btn btn-light disabled">{{ report_month.month_label }}</span>
-      {% if report_month.next_month %}
-        <a class="btn btn-outline-secondary" href="?month={{ report_month.next_month|date:'Y-m' }}">След.</a>
-      {% endif %}
-    </div>
-  </div>
+  <h1 class="page-title">Финансовый отчёт</h1>
+  <p class="page-sub">Быстрый обзор доходов по заказам и расходов по закупкам материалов.</p>
 
   <div class="row row-cols-1 row-cols-md-3 g-3">
     <div class="col">
@@ -80,13 +67,14 @@
         <div class="table-responsive">
           <table class="table mb-0">
             <thead class="table-light">
-              <tr><th>Дата</th><th>Компания</th><th class="text-end">Сумма</th></tr>
+              <tr><th>Дата</th><th>Компания</th><th>Комментарий</th><th class="text-end">Сумма</th></tr>
             </thead>
             <tbody>
               {% for expense in expense_rows %}
                 <tr>
                   <td>{{ expense.expense_date|date:'d.m.Y' }}</td>
                   <td>{{ expense.supplier_name }}</td>
+                  <td>{{ expense.description|default:'—' }}</td>
                   <td class="text-end">{{ expense.amount|default:0|floatformat:0 }} ₸</td>
                 </tr>
               {% empty %}

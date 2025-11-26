@@ -25,18 +25,7 @@
     <div class="col-lg-8">
       <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span>История закупок — {{ expense_month.month_label }}</span>
-            <div class="btn-group">
-              {% if expense_month.previous_month %}
-                <a class="btn btn-sm btn-outline-secondary" href="?month={{ expense_month.previous_month|date:'Y-m' }}">Пред.</a>
-              {% endif %}
-              <span class="btn btn-sm btn-light disabled">{{ expense_month.month_label }}</span>
-              {% if expense_month.next_month %}
-                <a class="btn btn-sm btn-outline-secondary" href="?month={{ expense_month.next_month|date:'Y-m' }}">След.</a>
-              {% endif %}
-            </div>
-          </div>
+          <div>История закупок</div>
           <a href="{% url 'portal:report' %}" class="btn btn-sm btn-outline-secondary">К отчёту</a>
         </div>
         <div class="table-responsive">
