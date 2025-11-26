@@ -40,7 +40,18 @@
     <div class="col-lg-8">
       <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <div>Последние заказы</div>
+          <div>
+            Последние заказы — {{ order_month.month_label }}
+          </div>
+          <div class="btn-group">
+            {% if order_month.previous_month %}
+              <a class="btn btn-sm btn-outline-secondary" href="?month={{ order_month.previous_month|date:'Y-m' }}">Пред.</a>
+            {% endif %}
+            <span class="btn btn-sm btn-light disabled">{{ order_month.month_label }}</span>
+            {% if order_month.next_month %}
+              <a class="btn btn-sm btn-outline-secondary" href="?month={{ order_month.next_month|date:'Y-m' }}">След.</a>
+            {% endif %}
+          </div>
           <a class="btn btn-sm btn-primary" href="{% url 'portal:wizard' %}">
             <i class="bi bi-plus-circle"></i> Новый заказ
           </a>

@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import F, Sum
+from django.db.models import F, Max, Min, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import Employee
@@ -13,14 +13,88 @@ from .forms import (
     CalculatorSummaryForm,
     ClientForm,
     ExpenseForm,
+    InventoryUsageForm,
     OrderDetailForm,
     OrderForm,
     OrderItemFormSet,
 )
-from .models import Expense, InventoryItem, Order, OrderItem
+from .models import Expense, InventoryItem, InventoryUsage, Order, OrderItem
+
+
+def _normalize_to_date(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    return value
+
+
+def _month_context(request, min_date, max_date):
+    today = date.today()
+    min_date = _normalize_to_date(min_date) or today
+    max_date = _normalize_to_date(max_date) or today
+
+    default_month = date(max_date.year, max_date.month, 1)
+    month_param = request.GET.get("month")
+    try:
+        if month_param:
+            year, month = [int(x) for x in month_param.split("-")]
+            current_month = date(year, month, 1)
+        else:
+            current_month = default_month
+    except (TypeError, ValueError):
+        current_month = default_month
+
+    min_month = date(min_date.year, min_date.month, 1)
+    max_month = date(max_date.year, max_date.month, 1)
+
+    if current_month < min_month:
+        current_month = min_month
+    if current_month > max_month:
+        current_month = max_month
+
+    if current_month.month == 12:
+        month_end = date(current_month.year + 1, 1, 1)
+    else:
+        month_end = date(current_month.year, current_month.month + 1, 1)
+
+    previous_month = None
+    if current_month > min_month:
+        if current_month.month == 1:
+            previous_month = date(current_month.year - 1, 12, 1)
+        else:
+            previous_month = date(current_month.year, current_month.month - 1, 1)
+
+    next_month = None
+    if current_month < max_month:
+        if current_month.month == 12:
+            next_month = date(current_month.year + 1, 1, 1)
+        else:
+            next_month = date(current_month.year, current_month.month + 1, 1)
+
+    month_slug = current_month.strftime("%Y-%m")
+    month_label = current_month.strftime("%m.%Y")
+
+    return {
+        "month_start": current_month,
+        "month_end": month_end,
+        "previous_month": previous_month,
+        "next_month": next_month,
+        "month_slug": month_slug,
+        "month_label": month_label,
+    }
 
 
 def index(request):
+    order_bounds = Order.objects.aggregate(
+        min_date=Min("created_at"), max_date=Max("created_at")
+    )
+    order_month = _month_context(
+        request,
+        order_bounds.get("min_date"),
+        order_bounds.get("max_date"),
+    )
+
     status_cards = [
         {
             "key": Order.Status.DEVELOPMENT,
@@ -71,7 +145,11 @@ def index(request):
     recent_orders = (
         Order.objects.select_related("client")
         .prefetch_related("items")
-        .order_by("-created_at")[:5]
+        .filter(
+            created_at__date__gte=order_month["month_start"],
+            created_at__date__lt=order_month["month_end"],
+        )
+        .order_by("-created_at")
     )
     low_stock = InventoryItem.objects.order_by("quantity_on_hand")[:5]
 
@@ -80,16 +158,48 @@ def index(request):
         "status_summary": status_summary,
         "recent_orders": recent_orders,
         "low_stock": low_stock,
+        "order_month": order_month,
     }
     return render(request, "portal/index.html", context)
 
 
 def report(request):
-    income_qs = Order.objects.select_related("client").order_by("-created_at")
+    order_bounds = Order.objects.aggregate(
+        min_date=Min("created_at"), max_date=Max("created_at")
+    )
+    expense_bounds = Expense.objects.aggregate(
+        min_date=Min("expense_date"), max_date=Max("expense_date")
+    )
+    bounds = [
+        _normalize_to_date(order_bounds.get("min_date")),
+        _normalize_to_date(expense_bounds.get("min_date")),
+    ]
+    bounds_max = [
+        _normalize_to_date(order_bounds.get("max_date")),
+        _normalize_to_date(expense_bounds.get("max_date")),
+    ]
+    min_date = min([d for d in bounds if d]) if any(bounds) else None
+    max_date = max([d for d in bounds_max if d]) if any(bounds_max) else None
+    month_ctx = _month_context(request, min_date, max_date)
+
+    income_qs = (
+        Order.objects.select_related("client")
+        .filter(
+            created_at__date__gte=month_ctx["month_start"],
+            created_at__date__lt=month_ctx["month_end"],
+        )
+        .order_by("-created_at")
+    )
     income_total = income_qs.aggregate(total=Sum("total_amount"))
     income_total = income_total.get("total") or Decimal("0")
 
-    expense_qs = Expense.objects.order_by("-expense_date")
+    expense_qs = (
+        Expense.objects.filter(
+            expense_date__gte=month_ctx["month_start"],
+            expense_date__lt=month_ctx["month_end"],
+        )
+        .order_by("-expense_date")
+    )
     expense_total = expense_qs.aggregate(total=Sum("amount"))
     expense_total = expense_total.get("total") or Decimal("0")
 
@@ -97,8 +207,9 @@ def report(request):
         "income_total": income_total,
         "expense_total": expense_total,
         "net_total": income_total - expense_total,
-        "income_rows": income_qs[:10],
-        "expense_rows": expense_qs[:10],
+        "income_rows": income_qs,
+        "expense_rows": expense_qs,
+        "report_month": month_ctx,
     }
     return render(request, "portal/report.html", context)
 
@@ -303,7 +414,22 @@ def inventory(request):
 
 
 def expenses(request):
-    expenses_qs = Expense.objects.all()
+    expense_bounds = Expense.objects.aggregate(
+        min_date=Min("expense_date"), max_date=Max("expense_date")
+    )
+    expense_month = _month_context(
+        request,
+        expense_bounds.get("min_date"),
+        expense_bounds.get("max_date"),
+    )
+
+    expenses_qs = (
+        Expense.objects.filter(
+            expense_date__gte=expense_month["month_start"],
+            expense_date__lt=expense_month["month_end"],
+        )
+        .order_by("-expense_date")
+    )
     if request.method == "POST":
         form = ExpenseForm(request.POST, request.FILES)
         if form.is_valid():
@@ -314,5 +440,39 @@ def expenses(request):
     else:
         form = ExpenseForm(initial={"expense_date": date.today()})
 
-    context = {"form": form, "expenses": expenses_qs}
+    context = {"form": form, "expenses": expenses_qs, "expense_month": expense_month}
     return render(request, "portal/expenses.html", context)
+
+
+def usage(request):
+    usage_qs = InventoryUsage.objects.select_related("item", "project")
+    usage_bounds = usage_qs.aggregate(
+        min_date=Min("usage_date"), max_date=Max("usage_date")
+    )
+    usage_month = _month_context(
+        request,
+        usage_bounds.get("min_date"),
+        usage_bounds.get("max_date"),
+    )
+
+    filtered_usages = usage_qs.filter(
+        usage_date__gte=usage_month["month_start"],
+        usage_date__lt=usage_month["month_end"],
+    ).order_by("-usage_date", "-created_at")
+
+    if request.method == "POST":
+        form = InventoryUsageForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Расход материалов сохранён")
+            return redirect("portal:usage")
+        messages.error(request, "Проверьте заполнение расхода")
+    else:
+        form = InventoryUsageForm(initial={"usage_date": date.today()})
+
+    context = {
+        "form": form,
+        "usages": filtered_usages,
+        "usage_month": usage_month,
+    }
+    return render(request, "portal/usage.html", context)

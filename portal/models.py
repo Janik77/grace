@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import models
 
 
@@ -133,6 +135,30 @@ class InventoryMovement(TimestampedModel):
     def __str__(self) -> str:
         prefix = "+" if self.direction == self.Direction.IN else "-"
         return f"{prefix}{self.quantity} {self.item.sku}"
+
+
+class InventoryUsage(TimestampedModel):
+    usage_date = models.DateField("Дата", default=date.today)
+    item = models.ForeignKey(
+        InventoryItem, on_delete=models.CASCADE, related_name="usages"
+    )
+    quantity = models.DecimalField("Количество", max_digits=12, decimal_places=2)
+    project = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="material_usages",
+        verbose_name="Проект / заказ",
+    )
+    comment = models.CharField("Комментарий", max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-usage_date", "-created_at"]
+
+    def __str__(self) -> str:
+        project_label = self.project.title if self.project else "Без проекта"
+        return f"{self.item.name} — {self.quantity} ({project_label})"
 
 
 class Expense(TimestampedModel):
