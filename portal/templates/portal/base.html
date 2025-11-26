@@ -56,6 +56,7 @@
         <a href="{% url 'portal:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}">Отчёт</a>
         <a href="{% url 'portal:expenses' %}" class="{% if request.resolver_match.url_name == 'expenses' %}active{% endif %}">Расходы</a>
         <a href="{% url 'portal:usage' %}" class="{% if request.resolver_match.url_name == 'usage' %}active{% endif %}">Учёт расходов</a>
+        <a href="{% url 'portal:defects' %}" class="{% if request.resolver_match.url_name == 'defects' %}active{% endif %}">Учёт брака</a>
         <a href="{% url 'portal:inventory' %}" class="{% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">Склад</a>
         <a href="{% url 'portal:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">Помощь</a>
         <a href="{% url 'portal:directory' %}" class="{% if request.resolver_match.url_name == 'directory' %}active{% endif %}">Справочник</a>

@@ -1,0 +1,7 @@
+# Ignore local datasets and binary office files
+/data/*.xlsx
+/data/*.xls
+
+# Python bytecode and cache
+__pycache__/
+*.pyc

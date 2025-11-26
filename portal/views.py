@@ -12,13 +12,21 @@ from .forms import (
     CalculatorItemFormSet,
     CalculatorSummaryForm,
     ClientForm,
+    DefectRecordForm,
     ExpenseForm,
     InventoryUsageForm,
     OrderDetailForm,
     OrderForm,
     OrderItemFormSet,
 )
-from .models import Expense, InventoryItem, InventoryUsage, Order, OrderItem
+from .models import (
+    DefectRecord,
+    Expense,
+    InventoryItem,
+    InventoryUsage,
+    Order,
+    OrderItem,
+)
 
 
 def _normalize_to_date(value):
@@ -476,3 +484,24 @@ def usage(request):
         "usage_month": usage_month,
     }
     return render(request, "portal/usage.html", context)
+
+
+def defects(request):
+    defect_qs = DefectRecord.objects.select_related("project", "responsible")
+
+    if request.method == "POST":
+        form = DefectRecordForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Брак/замечание сохранены")
+            return redirect("portal:defects")
+        messages.error(request, "Проверьте форму учёта брака")
+    else:
+        form = DefectRecordForm(initial={"report_date": date.today()})
+
+    defects_list = defect_qs.order_by("-report_date", "-created_at")
+    context = {
+        "form": form,
+        "defects": defects_list,
+    }
+    return render(request, "portal/defects.html", context)

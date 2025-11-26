@@ -1,7 +1,10 @@
 from django.contrib import admin
 
+from django.contrib import admin
+
 from .models import (
     Client,
+    DefectRecord,
     Expense,
     InventoryItem,
     InventoryMovement,
@@ -75,3 +78,10 @@ class InventoryUsageAdmin(admin.ModelAdmin):
     list_display = ("usage_date", "item", "quantity", "project", "comment", "created_at")
     list_filter = ("usage_date", "item")
     search_fields = ("item__name", "comment", "project__title")
+
+
+@admin.register(DefectRecord)
+class DefectRecordAdmin(admin.ModelAdmin):
+    list_display = ("report_date", "project", "responsible", "comment", "created_at")
+    list_filter = ("report_date", "project", "responsible")
+    search_fields = ("project__title", "responsible__full_name", "comment")

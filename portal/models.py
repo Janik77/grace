@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.db import models
+from accounts.models import Employee
 
 
 class TimestampedModel(models.Model):
@@ -179,3 +180,32 @@ class Expense(TimestampedModel):
 
     def __str__(self) -> str:
         return f"{self.supplier_name} — {self.amount}"
+
+
+class DefectRecord(TimestampedModel):
+    report_date = models.DateField("Дата", default=date.today)
+    project = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="defects",
+        verbose_name="Проект",
+    )
+    responsible = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="defects",
+        verbose_name="Ответственный",
+    )
+    comment = models.CharField("Комментарий", max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-report_date", "-created_at"]
+
+    def __str__(self) -> str:
+        project_label = self.project.title if self.project else "Без проекта"
+        person = self.responsible.full_name if self.responsible else "Не указано"
+        return f"{project_label} — {person}"
