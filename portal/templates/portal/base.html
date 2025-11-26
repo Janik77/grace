@@ -50,9 +50,13 @@
     <aside class="sidebar">
       <div class="nav">
         <div class="muted">Навигация</div>
-        <a href="{% url 'portal:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Отчёт / Главная</a>
+        <a href="{% url 'portal:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Главная</a>
         <a href="{% url 'portal:order' %}" class="{% if request.resolver_match.url_name == 'order' %}active{% endif %}">Калькулятор</a>
         <a href="{% url 'portal:wizard' %}" class="{% if request.resolver_match.url_name == 'wizard' %}active{% endif %}">Мастер заказов</a>
+        <a href="{% url 'portal:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}">Отчёт</a>
+        <a href="{% url 'portal:expenses' %}" class="{% if request.resolver_match.url_name == 'expenses' %}active{% endif %}">Расходы</a>
+        <a href="{% url 'portal:usage' %}" class="{% if request.resolver_match.url_name == 'usage' %}active{% endif %}">Учёт расходов</a>
+        <a href="{% url 'portal:inventory' %}" class="{% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">Склад</a>
         <a href="{% url 'portal:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">Помощь</a>
         <a href="{% url 'portal:directory' %}" class="{% if request.resolver_match.url_name == 'directory' %}active{% endif %}">Справочник</a>
         <a href="{% url 'portal:staff' %}" class="{% if request.resolver_match.url_name == 'staff' %}active{% endif %}">Сотрудники</a>
@@ -61,12 +65,26 @@
         <a href="{% url 'portal:wizard' %}">
           <i class="bi bi-plus-circle"></i> Новый заказ
         </a>
-        <a href="{% url 'portal:order' %}">Экспорт</a>
+        <a href="{% url 'portal:expenses' %}">
+          <i class="bi bi-receipt"></i> Учесть закупку
+        </a>
+        <a href="{% url 'portal:usage' %}">
+          <i class="bi bi-box-arrow-up"></i> Списание со склада
+        </a>
       </div>
     </aside>
 
     <!-- Контент -->
     <main class="content">
+      {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>

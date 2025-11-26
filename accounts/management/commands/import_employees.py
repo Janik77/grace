@@ -1,7 +1,10 @@
 import os
+
 import pandas as pd
+from django.conf import settings
 from django.core.management.base import BaseCommand
-from accounts.models import Employee, Position, Skill, Department, EmployeeSkill
+
+from accounts.models import Department, Employee, EmployeeSkill, Position, Skill
 
 
 class Command(BaseCommand):
@@ -9,20 +12,24 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--file',
+            "--file",
             type=str,
-            help='Путь к Excel-файлу (например: C:\\Users\\shero\\Downloads\\employees.xlsx)'
+            help=(
+                "Путь к Excel-файлу (например: C\\Users\\user\\Downloads\\employees.xlsx). "
+                "Если не указан, будет использован data/employees.xlsx внутри проекта."
+            ),
         )
 
     def handle(self, *args, **options):
-        file_path = options.get('file')
-
-        if not file_path:
-            self.stdout.write(self.style.ERROR("❌ Укажите путь к Excel-файлу через параметр --file"))
-            return
+        provided_path = options.get("file")
+        default_path = os.path.join(settings.BASE_DIR, "data", "employees.xlsx")
+        file_path = provided_path or default_path
 
         if not os.path.exists(file_path):
-            self.stdout.write(self.style.ERROR(f"❌ Файл не найден: {file_path}"))
+            error_msg = f"Файл не найден: {file_path}"
+            if not provided_path:
+                error_msg += " (укажите путь через --file, если файл лежит в другом месте)"
+            self.stdout.write(self.style.ERROR(f"❌ {error_msg}"))
             return
 
         df = pd.read_excel(file_path)
