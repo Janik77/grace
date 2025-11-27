@@ -1,0 +1,76 @@
+{% extends 'portal/base.html' %}
+{% block title %}Учёт брака{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Учёт брака по проектам</h1>
+  <a class="btn btn-outline-primary" href="{% url 'portal:index' %}"><i class="bi bi-arrow-left"></i> На главную</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Добавить запись</h2>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Дата</label>
+            {{ form.report_date }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Проект</label>
+            {{ form.project }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ответственный</label>
+            {{ form.responsible }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Комментарий</label>
+            {{ form.comment }}
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Сохранить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">Последние случаи</h2>
+          <span class="text-muted">Всего: {{ defects|length }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Проект</th>
+                <th>Ответственный</th>
+                <th>Комментарий</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for defect in defects %}
+                <tr>
+                  <td>{{ defect.report_date }}</td>
+                  <td>{{ defect.project.title|default:'—' }}</td>
+                  <td>{{ defect.responsible.full_name|default:'—' }}</td>
+                  <td>{{ defect.comment|default:'—' }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted">Пока нет данных</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

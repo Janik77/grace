@@ -1,0 +1,11 @@
+# Ignore local datasets and binary office files
+/data/*.xlsx
+/data/*.xls
+
+# Local SQLite database
+/db.sqlite3
+/db.sqlite3-journal
+
+# Python bytecode and cache
+__pycache__/
+*.pyc
