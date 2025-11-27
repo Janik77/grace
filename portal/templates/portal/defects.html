@@ -30,6 +30,10 @@
             <label class="form-label">Комментарий</label>
             {{ form.comment }}
           </div>
+          <div class="mb-3">
+            <label class="form-label">Статус</label>
+            {{ form.status }}
+          </div>
           <button type="submit" class="btn btn-primary w-100">Сохранить</button>
         </form>
       </div>
@@ -51,6 +55,7 @@
                 <th>Проект</th>
                 <th>Ответственный</th>
                 <th>Комментарий</th>
+                <th>Статус</th>
               </tr>
             </thead>
             <tbody>
@@ -60,10 +65,11 @@
                   <td>{{ defect.project.title|default:'—' }}</td>
                   <td>{{ defect.responsible.full_name|default:'—' }}</td>
                   <td>{{ defect.comment|default:'—' }}</td>
+                  <td>{{ defect.get_status_display }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="4" class="text-center text-muted">Пока нет данных</td>
+                  <td colspan="5" class="text-center text-muted">Пока нет данных</td>
                 </tr>
               {% endfor %}
             </tbody>
