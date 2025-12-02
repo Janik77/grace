@@ -172,12 +172,14 @@ class DefectRecordForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            css_class = "form-select" if name in {"project", "responsible"} else "form-control"
+            css_class = (
+                "form-select" if name in {"project", "responsible", "status"} else "form-control"
+            )
             field.widget.attrs.setdefault("class", css_class)
 
     class Meta:
         model = DefectRecord
-        fields = ["report_date", "project", "responsible", "comment"]
+        fields = ["report_date", "project", "responsible", "comment", "status"]
         widgets = {
             "report_date": forms.DateInput(attrs={"type": "date"}),
         }

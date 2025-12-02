@@ -82,6 +82,13 @@ class InventoryUsageAdmin(admin.ModelAdmin):
 
 @admin.register(DefectRecord)
 class DefectRecordAdmin(admin.ModelAdmin):
-    list_display = ("report_date", "project", "responsible", "comment", "created_at")
-    list_filter = ("report_date", "project", "responsible")
+    list_display = (
+        "report_date",
+        "project",
+        "responsible",
+        "status",
+        "comment",
+        "created_at",
+    )
+    list_filter = ("report_date", "project", "responsible", "status")
     search_fields = ("project__title", "responsible__full_name", "comment")

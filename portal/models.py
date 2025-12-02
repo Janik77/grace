@@ -183,6 +183,10 @@ class Expense(TimestampedModel):
 
 
 class DefectRecord(TimestampedModel):
+    class Status(models.TextChoices):
+        CLOSED = "closed", "Закрыто"
+        COMPLETED = "completed", "Завершено"
+
     report_date = models.DateField("Дата", default=date.today)
     project = models.ForeignKey(
         Order,
@@ -201,6 +205,12 @@ class DefectRecord(TimestampedModel):
         verbose_name="Ответственный",
     )
     comment = models.CharField("Комментарий", max_length=255, blank=True)
+    status = models.CharField(
+        "Статус",
+        max_length=20,
+        choices=Status.choices,
+        default=Status.CLOSED,
+    )
 
     class Meta:
         ordering = ["-report_date", "-created_at"]

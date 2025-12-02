@@ -489,6 +489,15 @@ def usage(request):
 def defects(request):
     defect_qs = DefectRecord.objects.select_related("project", "responsible")
 
+    defect_bounds = defect_qs.aggregate(
+        min_date=Min("report_date"), max_date=Max("report_date")
+    )
+    defect_month = _month_context(
+        request,
+        defect_bounds.get("min_date"),
+        defect_bounds.get("max_date"),
+    )
+
     if request.method == "POST":
         form = DefectRecordForm(request.POST)
         if form.is_valid():
@@ -499,9 +508,13 @@ def defects(request):
     else:
         form = DefectRecordForm(initial={"report_date": date.today()})
 
-    defects_list = defect_qs.order_by("-report_date", "-created_at")
+    defects_list = defect_qs.filter(
+        report_date__gte=defect_month["month_start"],
+        report_date__lt=defect_month["month_end"],
+    ).order_by("-report_date", "-created_at")
     context = {
         "form": form,
         "defects": defects_list,
+        "defect_month": defect_month,
     }
     return render(request, "portal/defects.html", context)
