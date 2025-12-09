@@ -55,6 +55,18 @@
                 <a class="btn btn-sm btn-outline-secondary" href="?month={{ defect_month.next_month|date:'Y-m' }}">След.</a>
               {% endif %}
             </div>
+            {% if defect_month.archive_months %}
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Архив
+                </button>
+                <ul class="dropdown-menu">
+                  {% for month in defect_month.archive_months %}
+                    <li><a class="dropdown-item" href="?month={{ month|date:'Y-m' }}">{{ month|date:'m.Y' }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
           </div>
           <span class="text-muted">Всего: {{ defects|length }}</span>
         </div>

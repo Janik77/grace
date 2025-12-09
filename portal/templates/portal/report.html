@@ -7,13 +7,27 @@
       <h1 class="page-title mb-0">Финансовый отчёт</h1>
       <p class="page-sub mb-0">Быстрый обзор доходов по заказам и расходов по закупкам материалов.</p>
     </div>
-    <div class="btn-group">
-      {% if report_month.previous_month %}
-        <a class="btn btn-outline-secondary" href="?month={{ report_month.previous_month|date:'Y-m' }}">Пред.</a>
-      {% endif %}
-      <span class="btn btn-light disabled">{{ report_month.month_label }}</span>
-      {% if report_month.next_month %}
-        <a class="btn btn-outline-secondary" href="?month={{ report_month.next_month|date:'Y-m' }}">След.</a>
+    <div class="d-flex align-items-center gap-2">
+      <div class="btn-group">
+        {% if report_month.previous_month %}
+          <a class="btn btn-outline-secondary" href="?month={{ report_month.previous_month|date:'Y-m' }}">Пред.</a>
+        {% endif %}
+        <span class="btn btn-light disabled">{{ report_month.month_label }}</span>
+        {% if report_month.next_month %}
+          <a class="btn btn-outline-secondary" href="?month={{ report_month.next_month|date:'Y-m' }}">След.</a>
+        {% endif %}
+      </div>
+      {% if report_month.archive_months %}
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Архив
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            {% for month in report_month.archive_months %}
+              <li><a class="dropdown-item" href="?month={{ month|date:'Y-m' }}">{{ month|date:'m.Y' }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
       {% endif %}
     </div>
   </div>
