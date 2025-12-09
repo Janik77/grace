@@ -39,10 +39,13 @@ def _normalize_to_date(value):
 
 def _month_context(request, min_date, max_date):
     today = date.today()
-    min_date = _normalize_to_date(min_date) or today
-    max_date = _normalize_to_date(max_date) or today
+    data_min_date = _normalize_to_date(min_date)
+    data_max_date = _normalize_to_date(max_date)
 
-    default_month = date(max_date.year, max_date.month, 1)
+    min_date = data_min_date or today
+    max_date = max(data_max_date or today, today)
+
+    default_month = date(today.year, today.month, 1)
     month_param = request.GET.get("month")
     try:
         if month_param:
@@ -83,6 +86,17 @@ def _month_context(request, min_date, max_date):
     month_slug = current_month.strftime("%Y-%m")
     month_label = current_month.strftime("%m.%Y")
 
+    archive_months = []
+    if data_min_date and data_max_date:
+        cursor = date(data_max_date.year, data_max_date.month, 1)
+        min_archive_month = date(data_min_date.year, data_min_date.month, 1)
+        while cursor >= min_archive_month:
+            archive_months.append(cursor)
+            if cursor.month == 1:
+                cursor = date(cursor.year - 1, 12, 1)
+            else:
+                cursor = date(cursor.year, cursor.month - 1, 1)
+
     return {
         "month_start": current_month,
         "month_end": month_end,
@@ -90,6 +104,7 @@ def _month_context(request, min_date, max_date):
         "next_month": next_month,
         "month_slug": month_slug,
         "month_label": month_label,
+        "archive_months": archive_months,
     }
 
 
@@ -489,6 +504,15 @@ def usage(request):
 def defects(request):
     defect_qs = DefectRecord.objects.select_related("project", "responsible")
 
+    defect_bounds = defect_qs.aggregate(
+        min_date=Min("report_date"), max_date=Max("report_date")
+    )
+    defect_month = _month_context(
+        request,
+        defect_bounds.get("min_date"),
+        defect_bounds.get("max_date"),
+    )
+
     if request.method == "POST":
         form = DefectRecordForm(request.POST)
         if form.is_valid():
@@ -499,9 +523,13 @@ def defects(request):
     else:
         form = DefectRecordForm(initial={"report_date": date.today()})
 
-    defects_list = defect_qs.order_by("-report_date", "-created_at")
+    defects_list = defect_qs.filter(
+        report_date__gte=defect_month["month_start"],
+        report_date__lt=defect_month["month_end"],
+    ).order_by("-report_date", "-created_at")
     context = {
         "form": form,
         "defects": defects_list,
+        "defect_month": defect_month,
     }
     return render(request, "portal/defects.html", context)
